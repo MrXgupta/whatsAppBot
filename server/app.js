@@ -126,12 +126,17 @@ app.post('/upload', upload.single('file'), (req, res) => {
         });
 });
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 app.post('/send', async (req, res) => {
     if (!isClientReady) {
         return res.status(503).json({ error: 'WhatsApp client is not ready.' });
     }
 
     const { numbers, message } = req.body;
+    const minDelay = Number(req.body.minDelay);
+    const maxDelay = Number(req.body.maxDelay);
+
 
     if (!Array.isArray(numbers) || numbers.length === 0) {
         return res.status(400).json({ error: 'No numbers provided.' });
@@ -148,7 +153,6 @@ app.post('/send', async (req, res) => {
             if (!isValidPhoneNumber(num)) {
                 throw new Error('Invalid phone number format');
             }
-
             const chatId = num.includes('@c.us') ? num : `${num}@c.us`;
             await client.sendMessage(chatId, message);
             logs.success.push(num);
@@ -157,10 +161,14 @@ app.post('/send', async (req, res) => {
             logs.failed.push({ number: num, error: err.message });
             io.emit('log', { number: num, status: 'failed', error: err.message });
         }
+
+        const delayMs = Math.floor(Math.random() * (maxDelay - minDelay + 1) + minDelay) * 1000;
+        await delay(delayMs);
     }
 
     res.json(logs);
 });
+
 
 server.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
