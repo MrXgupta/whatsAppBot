@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 
-const ContactSchema = new mongoose.Schema({
-    name: String,
-    number: { type: String, required: true },
-    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', required: true },
-    tags: [String],
+const ContactGroupSchema = new mongoose.Schema({
+    groupName: { type: String, required: true, unique: true },
+    numbers: [{ type: String }],
     addedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Contact', ContactSchema);
+module.exports = mongoose.model('ContactGroup', ContactGroupSchema);
