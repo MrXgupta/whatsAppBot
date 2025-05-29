@@ -39,23 +39,36 @@ export const handleAddNumber = (e, dispatch, numbers) => {
     e.target.reset();
 };
 
-export const handleSend = async (dispatch, numbers, message, setSending, minDelay, maxDelay,) => {
-    if (!message.trim()) return Swal.fire({ icon: 'error', title: 'Error', text: 'Message cannot be empty' });
-    if (!numbers.length) return Swal.fire({ icon: 'error', title: 'Error', text: 'Add numbers first' });
+export const handleSend = async ({
+                              campaignName,
+                              selectedContactGroup,
+                              message,
+                              minDelay,
+                              maxDelay,
+                              setSending,
+                          }) => {
+    if (!campaignName.trim() || !selectedContactGroup || !message.trim()) {
+        return Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.' });
+    }
 
-    dispatch(setLogs({ success: [], failed: [] }));
-    dispatch(setNumbers(numbers.map(n => ({ ...n, status: '' }))));
     setSending(true);
 
     try {
-        await axios.post('http://localhost:3000/send', {
-            numbers: numbers.map(n => n.number),
-            message,
-            minDelay,
-            maxDelay,
+        const formData = new FormData();
+        formData.append('campaignName', campaignName);
+        formData.append('groupId', selectedContactGroup);
+        formData.append('message', message);
+        formData.append('minDelay', minDelay);
+        formData.append('maxDelay', maxDelay);
+
+        await axios.post('http://localhost:3000/send', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
-    } catch {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send messages' });
+
+        Swal.fire({ icon: 'success', title: 'Message Sent', text: 'Campaign messages sent successfully.' });
+    } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send campaign messages.' });
     } finally {
         setSending(false);
     }

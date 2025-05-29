@@ -3,37 +3,48 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const Message = require('../models/Messages');
 const ContactGroup = require('../models/Contact');
-const isValidPhoneNumber = require('../utils/validators').isValidPhoneNumber;
+const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');
+const isValidPhoneNumber = require('../utils/validators').isValidPhoneNumber;
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const SendBulkMsg = (client, io, isClientReadyRef) => {
     const handler = async (req, res) => {
-        const { campaignId, message, minDelay, maxDelay } = req.body;
+        console.log('💡 Received body:', req.body);
+        const { campaignName, groupId, message, minDelay, maxDelay } = req.body;
         const mediaFile = req.file;
 
         if (!isClientReadyRef.value) {
             return res.status(503).json({ error: 'WhatsApp client is not ready.' });
         }
 
-        if (!campaignId || !message) {
-            return res.status(400).json({ error: 'Missing campaign ID or message.' });
-        }
-
-        if (isNaN(minDelay) || isNaN(maxDelay) || minDelay < 0 || maxDelay < minDelay) {
-            return res.status(400).json({ error: 'Invalid delay configuration.' });
+        if (!groupId || !message || !campaignName) {
+            return res.status(400).json({ error: 'Missing required fields.' });
         }
 
         try {
-            const group = await ContactGroup.findById(campaignId);
+            const group = await ContactGroup.findById(groupId);
             if (!group || !Array.isArray(group.numbers) || group.numbers.length === 0) {
                 return res.status(404).json({ error: 'No contacts found in the selected group.' });
             }
 
-            const logs = { success: [], failed: [] };
+            const campaign = await Campaign.create({
+                campaignName,
+                groupId,
+                groupName: group.groupName,
+                message,
+                totalContacts: group.numbers.length,
+                status: 'running',
+                sentAt: new Date(),
+                logs: [],
+            });
 
-            for (const number of group.numbers) {
+            for (let i = 0; i < group.numbers.length; i++) {
+                const number = group.numbers[i];
+                let status = 'success';
+                let error = '';
+
                 try {
                     if (!isValidPhoneNumber(number)) throw new Error('Invalid phone number');
 
@@ -41,7 +52,6 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
                     await delay(delayMs);
 
                     const chatId = number.includes('@c.us') ? number : `${number}@c.us`;
-
                     if (mediaFile) {
                         const media = new MessageMedia(
                             mediaFile.mimetype,
@@ -52,33 +62,21 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
                     } else {
                         await client.sendMessage(chatId, message);
                     }
-
-                    logs.success.push(number);
-                    io.emit('log', { number, status: 'success' });
-
-                    await Message.create({
-                        campaignId,
-                        number,
-                        message,
-                        status: 'success'
-                    });
                 } catch (err) {
-                    logs.failed.push({ number, error: err.message });
-                    io.emit('log', { number, status: 'failed', error: err.message });
-
-                    await Message.create({
-                        campaignId,
-                        number,
-                        message,
-                        status: 'failed',
-                        error: err.message
-                    });
+                    status = 'failed';
+                    error = err.message;
                 }
+
+                campaign.logs.push({ number, status, error });
+                io.emit('log', { number, status, error, progress: ((i + 1) / group.numbers.length) * 100 });
             }
 
-            return res.status(200).json(logs);
-        } catch (error) {
-            console.error('❌ Server Error:', error);
+            campaign.status = 'completed';
+            await campaign.save();
+
+            return res.status(200).json({ success: true, campaignId: campaign._id });
+        } catch (err) {
+            console.error('❌ Error in SendBulkMsg:', err);
             return res.status(500).json({ error: 'Server error while sending messages.' });
         }
     };

@@ -1,6 +1,3 @@
-2025/05/28-18:46:23.830 3c28 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2025/05/28-18:46:23.843 3c28 Recovering log #14
-2025/05/28-18:46:23.849 3c28 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/000014.log 
-2025/05/28-18:48:24.427 3c28 Level-0 table #18: started
-2025/05/28-18:48:24.438 3c28 Level-0 table #18: 14204 bytes OK
-2025/05/28-18:48:24.452 3c28 Delete type=0 #14
+2025/05/29-12:04:30.102 12f4 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+2025/05/29-12:04:30.112 12f4 Recovering log #17
+2025/05/29-12:04:30.114 12f4 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/000017.log 

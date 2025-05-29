@@ -9,26 +9,33 @@ const NavBar = () => {
         { to: "/campaigns", label: "Campaigns", icon: Layers },
         { to: "/contacts", label: "Contacts", icon: Users },
         { to: "/profile", label: "Profile", icon: UserCircle },
-        { to: "/", label: "More Coming...", icon: MoreHorizontal },
     ];
 
     return (
-        <aside className="group h-screen w-20 hover:w-64 transition-all bg-white shadow-md border-r p-4 flex flex-col gap-6">
-            <div className="flex justify-center items-center">
-                <img src="https://globecommunication.in/images/inner-pages/whatsapp-business.png" alt="" className="w-[50px]"/>
+        <aside className="group h-screen w-20 hover:w-64 transition-all duration-300 bg-white shadow-md border-r p-4 flex flex-col gap-6 overflow-hidden">
+            <div>
+                <h1 className="text-center font-bold text-gray-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">WhatsApp Bulk Sender</h1>
             </div>
 
-            <nav className="flex-1 flex flex-col gap-4 transition-all">
+            <nav className="flex-1 flex flex-col gap-4">
                 {navItems.map(({ to, label, icon: Icon }) => (
                     <Link
                         key={to}
                         to={to}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-all ${location.pathname === to ? 'bg-indigo-50 text-indigo-700 font-semibold' : ''}`}
+                        className={`flex items-center px-3 py-2 rounded-md text-gray-600 font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-all ${location.pathname === to ? 'bg-indigo-50 text-indigo-700 font-semibold' : ''}`}
                     >
-                        <Icon className="w-5 h-5" />
-                        <span className="hidden group-hover:block text-black text-sm ">{label}</span>
+                        <Icon className="w-5 h-5 shrink-0" />
+                        <span className="ml-3 whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-all duration-300 text-sm text-black">
+                            {label}
+                        </span>
                     </Link>
                 ))}
+                <div className="flex items-center px-3 py-2 text-gray-400 text-sm">
+                    <MoreHorizontal className="w-5 h-5" />
+                    <span className="ml-3 whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        More coming...
+                    </span>
+                </div>
             </nav>
         </aside>
     );

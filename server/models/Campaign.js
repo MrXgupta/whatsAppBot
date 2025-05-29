@@ -1,12 +1,20 @@
 const mongoose = require('mongoose');
 
 const CampaignSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    description: String,
-    status: { type: String, enum: ['active', 'paused', 'completed'], default: 'active' },
-    createdBy: { type: String },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    campaignName: { type: String, required: true },
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'ContactGroup', required: true },
+    groupName: { type: String },
+    message: { type: String },
+    totalContacts: { type: Number },
+    sentAt: { type: Date },
+    status: { type: String, enum: ['pending', 'running', 'completed'], default: 'pending' },
+    logs: [
+        {
+            number: String,
+            status: { type: String, enum: ['success', 'failed'] },
+            error: String,
+        },
+    ],
 });
 
 module.exports = mongoose.model('Campaign', CampaignSchema);

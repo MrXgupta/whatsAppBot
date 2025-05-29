@@ -1,7 +1,12 @@
-import {setMessage} from "../slices/appSlice.js";
+import { handleSend } from "../Components/Functions.js"
 import React from "react";
 
-const Template = ({message, dispatch, setMessage , handleSend, sending}) => {
+const Template = ({message, dispatch, setMessage , sending , campaignName,
+                      selectedContactGroup,
+                      minDelay,
+                      maxDelay,
+                      setSending,
+                  }) => {
     return (
         <>
         <textarea
@@ -18,7 +23,16 @@ const Template = ({message, dispatch, setMessage , handleSend, sending}) => {
             </div>
 
             <button
-                onClick={handleSend}
+                onClick={() =>
+                    handleSend({
+                        campaignName,
+                        selectedContactGroup,
+                        message,
+                        minDelay,
+                        maxDelay,
+                        setSending
+                    })
+                }
                 disabled={sending}
                 className={`px-6 py-2 rounded text-white ${sending ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600'}`}
             >

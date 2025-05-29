@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { setMessage } from "../slices/appSlice";
+import React, {useEffect, useState} from "react";
+import {useDispatch} from "react-redux";
+import {setMessage} from "../slices/appSlice";
 import Template from "../components/Template";
-import PreviewTable from "../components/PreviewTable";
+import {handleSend} from "../Components/Functions.js"
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -18,34 +18,10 @@ const Campaigns = () => {
     const [maxDelay, setMaxDelay] = useState(5);
     const [groups, setGroups] = useState([]);
 
-    const handleSend = async () => {
-        if (!selectedContactGroup || !message.trim()) {
-            return Swal.fire({ icon: 'error', title: 'Error', text: 'Please select a contact group and enter a message.' });
-        }
-
-        setSending(true);
-        console.log(campaignName, selectedContactGroup, message, minDelay, maxDelay);
-
-        try {
-            await axios.post('http://localhost:3000/send', {
-                campaignId: selectedContactGroup,
-                message,
-                minDelay,
-                maxDelay
-            });
-
-            Swal.fire({ icon: 'success', title: 'Message Sent', text: 'Campaign messages sent successfully.' });
-        } catch {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send campaign messages.' });
-        } finally {
-            setSending(false);
-        }
-    };
-
     useEffect(() => {
         const fetchGroups = async () => {
             try {
-                const { data } = await axios.get("http://localhost:3000/getContacts");
+                const {data} = await axios.get("http://localhost:3000/getContacts");
                 setGroups(data.groups || []);
             } catch (err) {
                 console.error("Failed to fetch groups", err);
@@ -124,8 +100,12 @@ const Campaigns = () => {
                         message={message}
                         setMessage={setMessageValue}
                         dispatch={dispatch}
-                        handleSend={handleSend}
                         sending={sending}
+                        campaignName={campaignName}
+                        selectedContactGroup={selectedContactGroup}
+                        minDelay={minDelay}
+                        maxDelay={maxDelay}
+                        setSending={setSending}
                     />
                 </div>
             )}

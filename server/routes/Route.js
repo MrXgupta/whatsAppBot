@@ -4,6 +4,7 @@ const handleCsv = require('../controllers/HandleCsv');
 const restartClient = require('../controllers/RestartClient');
 const CreateCampaign = require('../controllers/CreateCampaign');
 const {AddContactGroup , getContacts , getContactsById} = require('../controllers/AddContacts');
+const getCampaignStats = require('../controllers/getCampaignStats');
 
 module.exports = (io, client, isClientReadyRef) => {
     const router = express.Router();
@@ -15,7 +16,7 @@ module.exports = (io, client, isClientReadyRef) => {
     router.post('/contacts', AddContactGroup);
     router.get('/getcontacts', getContacts);
     router.get('/contacts/:id', getContactsById);
-
+    router.get('/campaign-stats', getCampaignStats);
     router.get('/client-info', async (req, res) => {
         try {
             const info = client.info;
