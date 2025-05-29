@@ -20,22 +20,44 @@ module.exports = (io, client, isClientReadyRef) => {
     router.get('/client-info', async (req, res) => {
         try {
             const info = client.info;
-            if (!info) {
-                return res.status(404).json({ error: 'Client not initialized yet' });
+            if (!info || !info.wid || client.pupBrowser?.isConnected?.() === false) {
+                return res.status(404).json({ error: 'Not connected' });
             }
 
-            const profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
+            let profilePicUrl = '';
+            try {
+                profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
+            } catch {
+                profilePicUrl = '';
+            }
+
             res.json({
-                name: info.pushname || "Unknown",
+                name: info.pushname || 'Unknown',
                 number: info.wid.user,
                 platform: info.platform,
-                profilePicUrl
+                profilePicUrl,
             });
-        } catch (error) {
-            console.error("Error getting client info:", error);
+
+        } catch (err) {
+            console.error('⚠️ Error fetching client info:', err.message);
             res.status(500).json({ error: 'Failed to fetch client info' });
         }
     });
+
+
+    router.post('/logout', async (req, res) => {
+        try {
+            await client.logout();
+            isClientReadyRef.value = false;
+            await client.destroy();
+            client.initialize();
+            res.json({ success: true });
+        } catch (err) {
+            console.error("Logout error:", err);
+            res.status(500).json({ error: "Logout failed." });
+        }
+    });
+
 
 
 

@@ -1,5 +1,4 @@
-// ✅ Enhanced Dashboard UI Based on WhatsApp Analytics Reference
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import io from 'socket.io-client';
 import Swal from 'sweetalert2';
 import { useSelector, useDispatch } from 'react-redux';
@@ -10,6 +9,8 @@ import {
     setClientReady
 } from '../slices/appSlice.js';
 import axios from 'axios';
+import LinkedAccount from '../Components/LinkedAccount';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 const socket = io('http://localhost:3000');
 
@@ -19,6 +20,15 @@ const Dashboard = () => {
     const [campaignStats, setCampaignStats] = useState([]);
     const [totalSent, setTotalSent] = useState(0);
     const [totalFailed, setTotalFailed] = useState(0);
+    const [progress, setProgress] = useState(0);
+
+    useEffect(() => {
+        socket.on('log', ({ number, status, error, progress }) => {
+            dispatch(updateStatus({ number, status }));
+            dispatch(updateLogs({ number, status, error }));
+            if (progress) setProgress(progress.toFixed(0));
+        });
+    }, []);
 
     useEffect(() => {
         socket.on('qr', qrCode => {
@@ -58,6 +68,30 @@ const Dashboard = () => {
         fetchStats();
     }, []);
 
+    const exportCsv = () => {
+        const headers = ['Campaign Name,Sent,Failed\n'];
+        const rows = campaignStats.map(c =>
+            `${c.campaignName},${c.sent},${c.failed}`
+        );
+        const blob = new Blob([headers.concat(rows).join('\n')], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'campaign-report.csv';
+        a.click();
+    };
+
+    const groupedByDate = useMemo(() => {
+        const map = {};
+        campaignStats.forEach(c => {
+            const date = c.sentAt?.split('T')[0];
+            if (!map[date]) map[date] = { sent: 0, failed: 0 };
+            map[date].sent += c.sent;
+            map[date].failed += c.failed;
+        });
+        return Object.entries(map).map(([date, stats]) => ({ date, ...stats }));
+    }, [campaignStats]);
+
     return (
         <div className="p-6">
             <h1 className="text-3xl font-bold mb-6">📊 WhatsApp Report Dashboard</h1>
@@ -80,6 +114,30 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            <div className="bg-white shadow rounded p-4 mt-4">
+                <h2 className="text-sm text-gray-600 mb-2">📬 Current Sending Progress</h2>
+                <div className="w-full bg-gray-200 h-3 rounded">
+                    <div className="bg-indigo-600 h-3 rounded transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
+                <p className="text-sm mt-1">{progress}% complete</p>
+            </div>
+
+            {groupedByDate.length > 0 && (
+                <div className="bg-white p-4 rounded shadow mt-6">
+                    <h3 className="text-lg font-semibold mb-4">📊 Messaging Trends</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={groupedByDate}>
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip />
+                            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+                            <Line type="monotone" dataKey="sent" stroke="#22c55e" />
+                            <Line type="monotone" dataKey="failed" stroke="#ef4444" />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+
             <div className="bg-white p-4 rounded shadow mb-6">
                 <h3 className="text-lg font-semibold mb-4">📦 Bulk Messaging Overview</h3>
                 <div className="grid grid-cols-3 gap-4 text-center">
@@ -98,27 +156,39 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold mb-4">📋 Campaign Breakdown</h3>
+            <div className="bg-white p-4 rounded shadow max-h-64 overflow-y-auto">
+                <div className="flex justify-between items-baseline mx-3 ">
+                <h3 className="text-lg font-semibold mb-4">📋 Recent Campaigns</h3>
+                <button
+                    onClick={exportCsv}
+                    className="mb-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                >
+                    ⬇️ Export CSV
+                </button>
+                </div>
                 <table className="w-full text-sm">
                     <thead>
                     <tr className="bg-gray-100">
                         <th className="p-2 text-left">Campaign Name</th>
                         <th className="p-2 text-left">Sent</th>
                         <th className="p-2 text-left">Failed</th>
+                        <th className="p-2 text-left">Date</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {campaignStats.map((campaign, i) => (
+                    {campaignStats.slice(0, 5).map((campaign, i) => (
                         <tr key={i} className="border-b hover:bg-gray-50">
                             <td className="p-2 font-medium">{campaign.campaignName}</td>
                             <td className="p-2 text-green-600">{campaign.sent}</td>
                             <td className="p-2 text-red-500">{campaign.failed}</td>
+                            <td className="p-2">{new Date(campaign.sentAt).toLocaleString()}</td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
             </div>
+
+            <LinkedAccount/>
         </div>
     );
 };

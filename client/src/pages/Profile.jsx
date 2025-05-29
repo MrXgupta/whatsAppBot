@@ -8,16 +8,12 @@ import {
     setClientReady,
 } from "../slices/appSlice.js";
 import { handleReconnect } from "../Components/Functions.js";
-import axios from "axios";
-
+import LinkedAccount from "../Components/LinkedAccount.jsx";
 const socket = io("http://localhost:3000");
-
 const Profile = () => {
     const dispatch = useDispatch();
     const { qr, clientReady } = useSelector((state) => state.app);
     const [loadingQr, setLoadingQr] = useState(false);
-    const [clientInfo, setClientInfo] = useState(null);
-
     useEffect(() => {
         socket.on("qr", (qrCode) => {
             dispatch(setQr(qrCode));
@@ -60,28 +56,6 @@ const Profile = () => {
             socket.off("disconnected");
         };
     }, [dispatch]);
-
-    useEffect(() => {
-        socket.on("client_info", (info) => {
-            setClientInfo(info);
-        });
-        const fetchClientInfo = async () => {
-            try {
-                const { data } = await axios.get("http://localhost:3000/client-info");
-                setClientInfo(data);
-            } catch (err) {
-                console.warn("No cached client info available yet.");
-            }
-        };
-
-        fetchClientInfo();
-
-        return () => {
-            socket.off("client_info");
-        };
-    }, []);
-
-
     return (
         <div className="p-6 max-w-2xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">🔐 WhatsApp Client Status</h1>
@@ -93,19 +67,9 @@ const Profile = () => {
                     clientReady={clientReady}
                     handleReconnect={() => handleReconnect(setLoadingQr)}
                 />
-                {clientInfo && (
-                    <div className="mt-6 border-t pt-4">
-                        <h3 className="text-lg font-semibold mb-2">🧾 Linked WhatsApp Details</h3>
-                        <img src={clientInfo.profilePicUrl} alt="Profile" className="w-20 h-20 rounded-full mb-2" />
-                        <p><strong>Name:</strong> {clientInfo.name}</p>
-                        <p><strong>Number:</strong> {clientInfo.number}</p>
-                        <p><strong>Platform:</strong> {clientInfo.platform}</p>
-                    </div>
-                )}
-
             </div>
+            <LinkedAccount />
         </div>
     );
 };
-
 export default Profile;

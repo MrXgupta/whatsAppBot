@@ -2,7 +2,7 @@ const Campaign = require('../models/Campaign');
 
 const getCampaignStats = async (req, res) => {
     try {
-        const campaigns = await Campaign.find({}, 'campaignName logs');
+        const campaigns = await Campaign.find({}, 'campaignName logs sentAt');
 
         const data = campaigns.map(c => {
             const sent = c.logs.filter(l => l.status === 'success').length;
@@ -10,7 +10,8 @@ const getCampaignStats = async (req, res) => {
             return {
                 campaignName: c.campaignName,
                 sent,
-                failed
+                failed,
+                sentAt: c.sentAt
             };
         });
 

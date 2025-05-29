@@ -1,5 +1,10 @@
 const Contacts = require('../models/Contact');
 
+const validateNumber = (number) => {
+    const cleaned = number.replace(/\D/g, '');
+    return /^91[6-9][0-9]{9}$/.test(cleaned);
+};
+
 const AddContactGroup = async (req, res) => {
     try {
         const { groupName, numbers } = req.body;
@@ -14,12 +19,35 @@ const AddContactGroup = async (req, res) => {
             return res.status(400).json({ error: 'Group name already exists.' });
         }
 
+        const validNumbers = [];
+        const invalidNumbers = [];
+
+        numbers.forEach(number => {
+            if (validateNumber(number)) {
+                validNumbers.push(number);
+            } else {
+                invalidNumbers.push(number);
+            }
+        });
+
         const group = await Contacts.create({
             groupName,
             numbers,
+            validNumbers,
+            invalidNumbers,
+            validationStatus: 'validated',
+            addedAt: new Date(),
         });
 
-        res.status(201).json({ success: true, group });
+        res.status(201).json({
+            success: true,
+            group,
+            stats: {
+                total: numbers.length,
+                valid: validNumbers.length,
+                invalid: invalidNumbers.length,
+            }
+        });
     } catch (error) {
         console.error('Error saving contact group:', error);
         res.status(500).json({ error: 'Failed to save contact group.' });
@@ -52,6 +80,4 @@ const getContactsById = async (req, res) => {
     }
 };
 
-
-
-module.exports = {AddContactGroup , getContacts , getContactsById}
+module.exports = { AddContactGroup, getContacts, getContactsById };

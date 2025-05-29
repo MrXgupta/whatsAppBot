@@ -19,17 +19,14 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Shared state
 const isClientReadyRef = { value: false };
 let client = null;
 
-// Initialize WhatsApp Client
 client = initClient(io, isClientReadyRef);
 
-// Load routes with dependencies
 app.use('/', routes(io, client, isClientReadyRef));
 
 server.listen(3000, () => {
-    console.log('🚀 Server running on http://localhost:3000');
+    console.log('Server running on http://localhost:3000');
 });
 

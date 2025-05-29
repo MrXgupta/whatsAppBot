@@ -17,13 +17,22 @@ module.exports = (io, isClientReadyRef) => {
 
     client.on('ready', async () => {
         isClientReadyRef.value = true;
-
         io.emit('ready');
-        console.log('WhatsApp client is ready!');
+        console.log('✅ WhatsApp client is ready!');
 
         try {
             const info = client.info;
-            const profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
+            if (!info || !info.wid || !info.wid._serialized) {
+                console.warn("Client info not available yet.");
+                return;
+            }
+
+            let profilePicUrl = '';
+            try {
+                profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
+            } catch (err) {
+                console.warn("Could not fetch profile picture. Possibly not available.");
+            }
 
             io.emit('client_info', {
                 name: info.pushname || 'Unknown',
@@ -32,24 +41,22 @@ module.exports = (io, isClientReadyRef) => {
                 profilePicUrl,
             });
         } catch (err) {
-            console.error('Failed to fetch client info:', err);
+            console.error('❌ Failed to fetch client info:', err);
         }
     });
 
     client.on('auth_failure', msg => {
         isClientReadyRef.value = false;
         io.emit('auth_failure', msg);
-        console.error('Auth failure:', msg);
+        console.error('❌ Auth failure:', msg);
     });
 
     client.on('disconnected', reason => {
         isClientReadyRef.value = false;
         io.emit('disconnected', reason);
-        console.log('Disconnected:', reason);
+        console.log('⚠️ Disconnected:', reason);
     });
 
     client.initialize();
     return client;
 };
-
-

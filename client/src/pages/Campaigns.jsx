@@ -17,6 +17,19 @@ const Campaigns = () => {
     const [minDelay, setMinDelay] = useState(2);
     const [maxDelay, setMaxDelay] = useState(5);
     const [groups, setGroups] = useState([]);
+    const [campaignStats, setCampaignStats] = useState([]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const { data } = await axios.get('http://localhost:3000/campaign-stats');
+                setCampaignStats(data.campaigns || []);
+            } catch (err) {
+                console.error('Error fetching campaign stats:', err);
+            }
+        };
+        fetchStats();
+    }, []);
 
     useEffect(() => {
         const fetchGroups = async () => {
@@ -110,9 +123,30 @@ const Campaigns = () => {
                 </div>
             )}
 
-            <div className="my-6">
-                <h2 className="text-lg text-gray-700 font-medium mb-2">📜 Previous Campaigns</h2>
-                <div className="text-sm text-gray-500">(Campaign list will appear here...)</div>
+            <div className="bg-white p-4 rounded shadow">
+                <h3 className="text-lg font-semibold mb-4">📋 Campaign Breakdown</h3>
+                <table className="w-full text-sm">
+                    <thead>
+                    <tr className="bg-gray-100">
+                        <th className="p-2 text-left">Campaign Name</th>
+                        <th className="p-2 text-left">Sent</th>
+                        <th className="p-2 text-left">Failed</th>
+                        <th className="p-2 text-left">Date / Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {campaignStats.map((campaign, i) => (
+                        <tr key={i} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-medium">{campaign.campaignName}</td>
+                            <td className="p-2 text-green-600">{campaign.sent}</td>
+                            <td className="p-2 text-red-500">{campaign.failed}</td>
+                            <td className="p-2 text-gray-700">
+                                {new Date(campaign.sentAt).toLocaleString()}
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

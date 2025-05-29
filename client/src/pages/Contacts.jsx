@@ -104,24 +104,30 @@ const Contacts = () => {
 
             <div>
                 <h2 className="text-xl font-semibold mb-3 text-gray-800">📁 Your Contact Groups</h2>
-                <ul className="divide-y divide-gray-200 bg-white rounded shadow-sm">
-                    {groups.length > 0 ? (
-                        groups.map(group => (
-                            <li
-                                key={group._id}
-                                className="p-4 hover:bg-gray-50 cursor-pointer"
-                                onClick={() => navigate(`/contacts/${group._id}`)}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="text-lg font-medium text-gray-700">📦 {group.groupName}</span>
-                                    <span className="text-sm text-gray-500">{group.numbers.length} contacts</span>
-                                </div>
-                            </li>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-500">No groups created yet.</p>
-                    )}
-                </ul>
+                <table className="w-full text-sm mt-4">
+                    <thead>
+                    <tr className="bg-gray-100 text-left">
+                        <th className="p-2">Group</th>
+                        <th className="p-2">Valid</th>
+                        <th className="p-2">Invalid</th>
+                        <th className="p-2">Status</th>
+                        <th className="p-2">Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {groups.map((g) => (
+                        <tr key={g._id} className="border-b"
+                            onClick={() => navigate(`/contacts/${g._id}`)}
+                        >
+                            <td className="p-2 font-semibold">{g.groupName}</td>
+                            <td className="p-2 text-green-600">{g.validNumbers.length}</td>
+                            <td className="p-2 text-red-500">{g.invalidNumbers.length}</td>
+                            <td className="p-2">{g.validationStatus}</td>
+                            <td className="p-2">{new Date(g.addedAt).toLocaleString()}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
