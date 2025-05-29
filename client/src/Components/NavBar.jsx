@@ -13,7 +13,7 @@ const NavBar = () => {
     ];
 
     return (
-        <aside className="group h-screen w-20 hover:w-64 transition-all duration-300 bg-white shadow-md border-r p-4 flex flex-col gap-6 overflow-hidden">
+        <aside className="group h-screen w-20 hover:w-64 transition-all duration-300 bg-white shadow-md p-4 flex flex-col gap-6 overflow-hidden">
             <div className="flex items-center justify-between">
                 {/*<h1 className="text-center font-bold text-gray-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">WhatsApp Bulk Sender</h1>*/}
                 <img src={logo} alt="" className="w-full h-full" />

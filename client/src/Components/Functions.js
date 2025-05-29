@@ -40,13 +40,15 @@ export const handleAddNumber = (e, dispatch, numbers) => {
 };
 
 export const handleSend = async ({
-                              campaignName,
-                              selectedContactGroup,
-                              message,
-                              minDelay,
-                              maxDelay,
-                              setSending,
-                          }) => {
+                                     campaignName,
+                                     selectedContactGroup,
+                                     message,
+                                     minDelay,
+                                     maxDelay,
+                                     mediaFile,
+                                     setSending
+
+                                 }) => {
     if (!campaignName.trim() || !selectedContactGroup || !message.trim()) {
         return Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.' });
     }
@@ -60,6 +62,11 @@ export const handleSend = async ({
         formData.append('message', message);
         formData.append('minDelay', minDelay);
         formData.append('maxDelay', maxDelay);
+
+        if (mediaFile) {
+            formData.append('media', mediaFile);
+            console.log('📤 Appended media file:', mediaFile);
+        }
 
         await axios.post('http://localhost:3000/send', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
