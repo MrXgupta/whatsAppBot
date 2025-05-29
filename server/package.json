@@ -4,6 +4,7 @@
   "description": "WhatsApp bulk sender backend",
   "main": "app.js",
   "scripts": {
+    "dev": "nodemon app.js",
     "start": "node app.js"
   },
   "author": "",

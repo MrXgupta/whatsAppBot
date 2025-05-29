@@ -11,6 +11,7 @@ import {
 import axios from 'axios';
 import LinkedAccount from '../Components/LinkedAccount';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import Loader from '../Components/Loader';
 
 const socket = io('http://localhost:3000');
 
@@ -21,6 +22,8 @@ const Dashboard = () => {
     const [totalSent, setTotalSent] = useState(0);
     const [totalFailed, setTotalFailed] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [loading, setLoading] = useState(false);
+
 
     useEffect(() => {
         socket.on('log', ({ number, status, error, progress }) => {
@@ -56,11 +59,13 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchStats = async () => {
+            setLoading(false);
             try {
                 const { data } = await axios.get('http://localhost:3000/campaign-stats');
                 setCampaignStats(data.campaigns || []);
                 setTotalSent(data.totalSent || 0);
                 setTotalFailed(data.totalFailed || 0);
+                setLoading(true);
             } catch (err) {
                 console.error('Error fetching campaign stats:', err);
             }
@@ -93,9 +98,10 @@ const Dashboard = () => {
     }, [campaignStats]);
 
     return (
+        <>
+        {loading ? (
         <div className="p-6">
             <h1 className="text-3xl font-bold mb-6">📊 WhatsApp Report Dashboard</h1>
-
             <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-white shadow rounded p-4">
                     <h2 className="text-sm text-gray-600">Message by month</h2>
@@ -189,7 +195,8 @@ const Dashboard = () => {
             </div>
 
             <LinkedAccount/>
-        </div>
+        </div>) : (<Loader/>)}
+        </>
     );
 };
 

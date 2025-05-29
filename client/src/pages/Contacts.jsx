@@ -5,13 +5,13 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-
+import Loader from "../Components/Loader";
 const Contacts = () => {
     const fileRef = useRef();
     const { numbers } = useSelector(state => state.app);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const [loading, setLoading] = useState(false);
     const [groupName, setGroupName] = useState("");
     const [showForm, setShowForm] = useState(false);
     const [groups, setGroups] = useState([]);
@@ -27,6 +27,7 @@ const Contacts = () => {
         }
 
         try {
+            setLoading(false);
             await axios.post("http://localhost:3000/contacts", {
                 groupName,
                 numbers: numberList,
@@ -35,6 +36,7 @@ const Contacts = () => {
             Swal.fire({ icon: 'success', title: 'Contacts Saved', text: 'Group created successfully.' });
             setGroupName("");
             setShowForm(false);
+            setLoading(true)
             fetchGroups();
         } catch (err) {
             console.error(err);
@@ -43,9 +45,11 @@ const Contacts = () => {
     };
 
     const fetchGroups = async () => {
+        setLoading(false);
         try {
             const { data } = await axios.get("http://localhost:3000/getContacts");
             setGroups(data.groups || []);
+            setLoading(true)
         } catch (err) {
             console.error("Failed to fetch groups", err);
         }
@@ -56,6 +60,8 @@ const Contacts = () => {
     }, []);
 
     return (
+        <>
+            {loading ? (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">📇 Contact Groups</h1>
@@ -128,8 +134,9 @@ const Contacts = () => {
                     ))}
                     </tbody>
                 </table>
-            </div>
         </div>
+            </div> ) : (<Loader/>)}
+    </>
     );
 };
 

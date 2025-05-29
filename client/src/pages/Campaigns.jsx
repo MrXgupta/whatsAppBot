@@ -5,6 +5,7 @@ import Template from "../components/Template";
 import {handleSend} from "../Components/Functions.js"
 import axios from "axios";
 import Swal from "sweetalert2";
+import Loader from "../components/loader";
 
 const Campaigns = () => {
     const dispatch = useDispatch();
@@ -18,12 +19,15 @@ const Campaigns = () => {
     const [maxDelay, setMaxDelay] = useState(5);
     const [groups, setGroups] = useState([]);
     const [campaignStats, setCampaignStats] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
+            setLoading(false);
             try {
                 const { data } = await axios.get('http://localhost:3000/campaign-stats');
                 setCampaignStats(data.campaigns || []);
+                setLoading(true);
             } catch (err) {
                 console.error('Error fetching campaign stats:', err);
             }
@@ -33,9 +37,11 @@ const Campaigns = () => {
 
     useEffect(() => {
         const fetchGroups = async () => {
+            setLoading(false);
             try {
                 const {data} = await axios.get("http://localhost:3000/getContacts");
                 setGroups(data.groups || []);
+                setLoading(true);
             } catch (err) {
                 console.error("Failed to fetch groups", err);
             }
@@ -45,6 +51,9 @@ const Campaigns = () => {
     }, []);
 
     return (
+        <>
+            {loading ? (
+
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-semibold text-gray-800">📢 Campaigns</h1>
@@ -149,6 +158,8 @@ const Campaigns = () => {
                 </table>
             </div>
         </div>
+            ) : (<Loader/>)}
+        </>
     );
 };
 
