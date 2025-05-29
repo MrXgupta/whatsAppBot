@@ -39,3 +39,7 @@ Thumbs.db
 coverage/
 client/coverage/
 server/coverage/
+
+server/.wwebjs_auth
+server/.wwebjs_cache
+server/.wwebjs_auth/session
