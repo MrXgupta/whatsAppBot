@@ -1,27 +1,29 @@
-2025/05/29-18:37:29.733 4778 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/05/29-18:37:29.734 4778 Recovering log #653
-2025/05/29-18:37:29.760 4778 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000653.log 
-2025/05/29-18:37:31.231 40ac Level-0 table #665: started
-2025/05/29-18:37:31.246 40ac Level-0 table #665: 536621 bytes OK
-2025/05/29-18:37:31.247 40ac Delete type=0 #653
-2025/05/29-18:37:31.248 40ac Manual compaction at level-0 from '\x00\x80\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x81\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/05/29-18:37:33.478 4778 Compacting 1@1 + 8@2 files
-2025/05/29-18:37:33.638 4778 Generated table #666@1: 52292 keys, 2216258 bytes
-2025/05/29-18:37:33.703 4778 Generated table #667@1: 10180 keys, 2163230 bytes
-2025/05/29-18:37:33.764 4778 Generated table #668@1: 3776 keys, 2158559 bytes
-2025/05/29-18:37:33.845 4778 Generated table #669@1: 18679 keys, 2200006 bytes
-2025/05/29-18:37:33.940 4778 Generated table #670@1: 29935 keys, 2229248 bytes
-2025/05/29-18:37:34.027 4778 Generated table #671@1: 37653 keys, 2168856 bytes
-2025/05/29-18:37:34.213 4778 Generated table #672@1: 96383 keys, 2245778 bytes
-2025/05/29-18:37:34.290 4778 Generated table #673@1: 69380 keys, 1623491 bytes
-2025/05/29-18:37:34.290 4778 Compacted 1@1 + 8@2 files => 17005426 bytes
-2025/05/29-18:37:34.291 4778 compacted to: files[ 0 0 8 0 0 0 0 ]
-2025/05/29-18:37:34.292 4778 Delete type=2 #655
-2025/05/29-18:37:34.292 4778 Delete type=2 #656
-2025/05/29-18:37:34.292 4778 Delete type=2 #657
-2025/05/29-18:37:34.292 4778 Delete type=2 #658
-2025/05/29-18:37:34.292 4778 Delete type=2 #659
-2025/05/29-18:37:34.292 4778 Delete type=2 #660
-2025/05/29-18:37:34.292 4778 Delete type=2 #661
-2025/05/29-18:37:34.292 4778 Delete type=2 #662
-2025/05/29-18:37:34.292 4778 Delete type=2 #665
+2025/05/30-13:42:20.206 2278 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/05/30-13:42:20.209 2278 Recovering log #1495
+2025/05/30-13:42:20.221 2278 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001495.log 
+2025/05/30-13:42:21.765 3e9c Level-0 table #1508: started
+2025/05/30-13:42:21.768 3e9c Level-0 table #1508: 114813 bytes OK
+2025/05/30-13:42:21.769 3e9c Delete type=0 #1495
+2025/05/30-13:42:21.769 3e9c Manual compaction at level-0 from ' :\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' ;\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/05/30-13:42:23.364 2278 Compacting 1@1 + 9@2 files
+2025/05/30-13:42:23.447 2278 Generated table #1509@1: 61259 keys, 2220502 bytes
+2025/05/30-13:42:23.491 2278 Generated table #1510@1: 22222 keys, 2176473 bytes
+2025/05/30-13:42:23.523 2278 Generated table #1511@1: 3725 keys, 2156980 bytes
+2025/05/30-13:42:23.562 2278 Generated table #1512@1: 13031 keys, 2177689 bytes
+2025/05/30-13:42:23.630 2278 Generated table #1513@1: 32244 keys, 2245437 bytes
+2025/05/30-13:42:23.664 2278 Generated table #1514@1: 11179 keys, 2146140 bytes
+2025/05/30-13:42:23.745 2278 Generated table #1515@1: 92063 keys, 2240653 bytes
+2025/05/30-13:42:23.833 2278 Generated table #1516@1: 98880 keys, 2249379 bytes
+2025/05/30-13:42:23.878 2278 Generated table #1517@1: 56136 keys, 1284795 bytes
+2025/05/30-13:42:23.878 2278 Compacted 1@1 + 9@2 files => 18898048 bytes
+2025/05/30-13:42:23.878 2278 compacted to: files[ 0 0 9 0 0 0 0 ]
+2025/05/30-13:42:23.879 2278 Delete type=2 #1497
+2025/05/30-13:42:23.879 2278 Delete type=2 #1498
+2025/05/30-13:42:23.879 2278 Delete type=2 #1499
+2025/05/30-13:42:23.879 2278 Delete type=2 #1500
+2025/05/30-13:42:23.879 2278 Delete type=2 #1501
+2025/05/30-13:42:23.879 2278 Delete type=2 #1502
+2025/05/30-13:42:23.879 2278 Delete type=2 #1503
+2025/05/30-13:42:23.879 2278 Delete type=2 #1504
+2025/05/30-13:42:23.879 2278 Delete type=2 #1505
+2025/05/30-13:42:23.879 2278 Delete type=2 #1508

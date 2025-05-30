@@ -40,6 +40,7 @@ const ShowContacts = () => {
                 <p><strong>📦 Total Numbers:</strong> {group.numbers.length}</p>
                 <p className="text-green-600"><strong>✅ Valid:</strong> {group.validNumbers.length}</p>
                 <p className="text-red-500"><strong>❌ Invalid:</strong> {group.invalidNumbers.length}</p>
+                <p className="text-red-500"><strong>❌ Duplicate (Removed):</strong> {group.duplicatesRemoved}</p>
                 <p><strong>🔍 Status:</strong> {group.validationStatus}</p>
             </div>
 

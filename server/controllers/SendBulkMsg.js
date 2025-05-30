@@ -1,7 +1,7 @@
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const Message = require('../models/Messages');
+const Message = require('../models/ChatBotKeywords');
 const ContactGroup = require('../models/Contact');
 const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');

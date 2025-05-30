@@ -6,6 +6,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Components/Loader";
+// import exampleCsv from "../assets/example.csv";
 const Contacts = () => {
     const fileRef = useRef();
     const { numbers } = useSelector(state => state.app);
@@ -15,34 +16,42 @@ const Contacts = () => {
     const [groupName, setGroupName] = useState("");
     const [showForm, setShowForm] = useState(false);
     const [groups, setGroups] = useState([]);
+    const [previewNumbers, setPreviewNumbers] = useState([]);
+    const [filePath, setFilePath] = useState('');
 
     const handleSaveContacts = async () => {
-        const numberList = numbers.map(n => n.number);
-
         if (!groupName.trim()) {
             return Swal.fire({ icon: 'error', title: 'Missing Group Name', text: 'Please provide a group name.' });
         }
-        if (!numberList.length) {
-            return Swal.fire({ icon: 'error', title: 'No Contacts', text: 'Please add contacts before saving.' });
+
+        if (!filePath) {
+            return Swal.fire({ icon: 'error', title: 'Missing File', text: 'Please upload a CSV file before saving.' });
         }
 
         try {
-            setLoading(false);
-            await axios.post("http://localhost:3000/contacts", {
+            setLoading(true);
+
+            const { data } = await axios.post("http://localhost:3000/contacts", {
                 groupName,
-                numbers: numberList,
+                filePath,
             });
 
-            Swal.fire({ icon: 'success', title: 'Contacts Saved', text: 'Group created successfully.' });
+            Swal.fire({ icon: 'success', title: 'Group Saved', text: 'Validation will complete shortly in the background.' });
+
+            // Reset form
             setGroupName("");
+            setFilePath("");
             setShowForm(false);
-            setLoading(true)
             fetchGroups();
         } catch (err) {
             console.error(err);
             Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save contacts.' });
+        } finally {
+            setLoading(false);
         }
     };
+
+
 
     const fetchGroups = async () => {
         setLoading(false);
@@ -75,6 +84,24 @@ const Contacts = () => {
 
             {showForm && (
                 <div className="bg-white shadow-md rounded p-6 mb-6">
+
+                    <div className="m-4 border-l-4 border-gray-400 pl-4 text-sm mt-6">
+                        <p className="text-sm text-gray-600 mb-2">
+                            📌 <strong>Number Format Rules:</strong><br />
+                            • Each number must be 12 digits starting with country code <code>91</code> (e.g. <code>919876543210</code>).<br />
+                            • Only numeric values are allowed — no spaces, dashes, or text.<br />
+                            • File should contain a single column titled <code>number</code>.<br />
+                        </p>
+
+                        <a
+                            href="../../public/example.csv"
+                            download
+                            className="text-blue-600 hover:underline text-sm"
+                        >
+                            ⬇️ Download sample CSV template
+                        </a>
+                    </div>
+
                     <div className="mb-4">
                         <label className="block mb-1 text-sm font-medium text-gray-600">Group Name</label>
                         <input
@@ -92,12 +119,12 @@ const Contacts = () => {
                             type="file"
                             accept=".csv"
                             className="block w-full mb-2 text-sm text-gray-600"
-                            onChange={(e) => handleFileUpload(e, dispatch)}
+                            onChange={(e) => handleFileUpload(e, dispatch, setPreviewNumbers, setFilePath)}
                         />
                         <p className="text-sm text-gray-500">Upload a CSV file with a column named <code>number</code>.</p>
                     </div>
 
-                    <PreviewTable numbers={numbers} />
+                    <PreviewTable numbers={previewNumbers} />
 
                     <button
                         onClick={handleSaveContacts}
@@ -105,6 +132,7 @@ const Contacts = () => {
                     >
                         Save Group
                     </button>
+
                 </div>
             )}
 
@@ -116,20 +144,24 @@ const Contacts = () => {
                         <th className="p-2">Group</th>
                         <th className="p-2">Valid</th>
                         <th className="p-2">Invalid</th>
+                        <th className="p-2">Duplicate (Removed)</th>
                         <th className="p-2">Status</th>
                         <th className="p-2">Date</th>
+                        <th className="p-2">Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     {groups.map((g) => (
-                        <tr key={g._id} className="border-b"
-                            onClick={() => navigate(`/contacts/${g._id}`)}
-                        >
+                        <tr key={g._id} className="border-b">
                             <td className="p-2 font-semibold">{g.groupName}</td>
                             <td className="p-2 text-green-600">{g.validNumbers.length}</td>
                             <td className="p-2 text-red-500">{g.invalidNumbers.length}</td>
+                            <td className="p-2 text-red-500">{g.duplicatesRemoved}</td>
                             <td className="p-2">{g.validationStatus}</td>
                             <td className="p-2">{new Date(g.addedAt).toLocaleString()}</td>
+                            <td className="p-2 cursor-pointer hover:text-indigo-600"
+                            onClick={() => navigate(`/contacts/${g._id}`)}
+                            >View</td>
                         </tr>
                     ))}
                     </tbody>

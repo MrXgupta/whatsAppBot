@@ -31,7 +31,7 @@ module.exports = (io, isClientReadyRef) => {
             try {
                 profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
             } catch (err) {
-                console.warn("Could not fetch profile picture. Possibly not available.");
+                console.warn("Could not fetch profile picture.");
             }
 
             io.emit('client_info', {
@@ -58,5 +58,6 @@ module.exports = (io, isClientReadyRef) => {
     });
 
     client.initialize();
+
     return client;
 };

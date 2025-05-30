@@ -3,7 +3,7 @@ import { Mic, Paperclip, Send, Smile } from "lucide-react";
 
 const CampaignPreview = ({ message, mediaFile }) => {
     return (
-        <div className="w-full md:w-1/2 flex justify-center items-start">
+        <div className="w-full flex justify-center items-start">
             <div className="w-[320px] h-[640px] bg-black rounded-[40px] border-[14px] border-black shadow-lg overflow-hidden relative">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-black rounded-b-xl z-10"></div>
                 <div className="w-full h-full bg-white flex flex-col">

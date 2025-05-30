@@ -5,6 +5,7 @@ const ContactGroupSchema = new mongoose.Schema({
     numbers: [{ type: String }],
     validNumbers: [{ type: String }],
     invalidNumbers: [{ type: String }],
+    duplicatesRemoved: { type: Number, default: 0 },
     validationStatus: { type: String, default: 'pending' },
     addedAt: { type: Date, default: Date.now }
 });

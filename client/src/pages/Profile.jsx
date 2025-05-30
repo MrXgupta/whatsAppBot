@@ -7,7 +7,6 @@ import {
     setQr,
     setClientReady,
 } from "../slices/appSlice.js";
-import { handleReconnect } from "../Components/Functions.js";
 import LinkedAccount from "../Components/LinkedAccount.jsx";
 const socket = io("http://localhost:3000");
 const Profile = () => {
@@ -65,7 +64,6 @@ const Profile = () => {
                     loadingQr={loadingQr}
                     qr={qr}
                     clientReady={clientReady}
-                    handleReconnect={() => handleReconnect(setLoadingQr)}
                 />
             </div>
             <LinkedAccount />

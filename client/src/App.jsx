@@ -5,6 +5,7 @@ import ContactManager from './pages/Contacts';
 import Campaigns from './pages/Campaigns';
 import ShowContacts from './pages/ShowContacts';
 import Profile from './pages/Profile';
+import CampaignDetail from "./pages/CampaignDetail.jsx";
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                     <Route path="campaigns" element={<Campaigns />} />
                     <Route path="contacts/:id" element={<ShowContacts />} />
                     <Route path="profile" element={<Profile />} />
+                    <Route path="/campaign/:id" element={<CampaignDetail />} />
                     <Route path="*" element={<Dashboard />} />
                 </Route>
             </Routes>

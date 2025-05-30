@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const CampaignStats = ({ campaignStats }) => {
     return (
@@ -11,6 +12,7 @@ const CampaignStats = ({ campaignStats }) => {
                     <th className="p-2 text-left">Sent</th>
                     <th className="p-2 text-left">Failed</th>
                     <th className="p-2 text-left">Date / Time</th>
+                    <th className="p-2 text-left">Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -22,6 +24,7 @@ const CampaignStats = ({ campaignStats }) => {
                         <td className="p-2 text-gray-700">
                             {new Date(campaign.sentAt).toLocaleString()}
                         </td>
+                        <td className="p-2"><Link to={`/campaign/${campaign.id}`} className="px-4 py-2 border bg-indigo-400 mx-4 hover:bg-indigo-500">View</Link></td>
                     </tr>
                 ))}
                 </tbody>

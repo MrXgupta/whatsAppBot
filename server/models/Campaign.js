@@ -15,6 +15,7 @@ const CampaignSchema = new mongoose.Schema({
             error: String,
         },
     ],
+    addedAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Campaign', CampaignSchema);
