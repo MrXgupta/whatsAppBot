@@ -1,3 +1,14 @@
-2025/05/30-16:44:55.191 3840 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2025/05/30-16:44:55.198 3840 Recovering log #22
-2025/05/30-16:44:55.199 3840 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/000022.log 
+2025/05/30-17:22:49.769 2a98 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+2025/05/30-17:22:49.781 2a98 Recovering log #22
+2025/05/30-17:22:49.782 2a98 Level-0 table #25: started
+2025/05/30-17:22:49.795 2a98 Level-0 table #25: 13737 bytes OK
+2025/05/30-17:22:49.807 2a98 Delete type=0 #22
+2025/05/30-17:22:49.807 226c Compacting 4@0 + 1@1 files
+2025/05/30-17:22:49.821 226c Generated table #27@0: 74 keys, 7480 bytes
+2025/05/30-17:22:49.821 226c Compacted 4@0 + 1@1 files => 7480 bytes
+2025/05/30-17:22:49.822 226c compacted to: files[ 0 1 0 0 0 0 0 ]
+2025/05/30-17:22:49.823 226c Delete type=2 #14
+2025/05/30-17:22:49.823 226c Delete type=2 #16
+2025/05/30-17:22:49.823 226c Delete type=2 #19
+2025/05/30-17:22:49.824 226c Delete type=2 #23
+2025/05/30-17:22:49.824 226c Delete type=2 #25

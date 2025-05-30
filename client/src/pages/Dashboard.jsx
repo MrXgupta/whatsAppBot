@@ -23,6 +23,7 @@ const Dashboard = () => {
     const [totalFailed, setTotalFailed] = useState(0);
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [botstats, setBotStats] = useState({})
 
 
     useEffect(() => {
@@ -97,6 +98,23 @@ const Dashboard = () => {
         return Object.entries(map).map(([date, stats]) => ({ date, ...stats }));
     }, [campaignStats]);
 
+    useEffect(() => {
+        const fetchBotStats = async () => {
+            try {
+                const res = await axios.get('http://localhost:3000/chatbotStats');
+                if (res.data.success) {
+                    setBotStats(res.data.stats);
+                }
+            } catch (err) {
+                console.error('Error fetching chatbot stats:', err);
+            } finally {
+                setLoading(true);
+            }
+        };
+
+        fetchBotStats();
+    }, []);
+
     return (
         <>
         {loading ? (
@@ -144,7 +162,30 @@ const Dashboard = () => {
                 </div>
             )}
 
-            <div className="bg-white p-4 rounded shadow mb-6">
+
+            <div className="bg-white p-4 rounded shadow my-6">
+                <h3 className="text-lg font-semibold mb-4">🤖 Bot Replies Overview</h3>
+                {loading ? (
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <h4 className="text-sm text-gray-600">Total</h4>
+                            <p className="text-xl font-bold">{botstats.total}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-sm text-gray-600">Successful</h4>
+                            <p className="text-xl font-bold text-green-600">{botstats.sent}</p>
+                        </div>
+                        <div>
+                            <h4 className="text-sm text-gray-600">Failed</h4>
+                            <p className="text-xl font-bold text-red-500">{botstats.failed}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-center text-gray-500">Loading stats...</div>
+                )}
+            </div>
+
+            <div className="bg-white p-4 rounded shadow my-6">
                 <h3 className="text-lg font-semibold mb-4">📦 Bulk Messaging Overview</h3>
                 <div className="grid grid-cols-3 gap-4 text-center">
                     <div>

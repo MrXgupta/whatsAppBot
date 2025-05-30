@@ -1,64 +1,31 @@
-2025/05/30-16:45:05.162 431c Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/05/30-16:45:05.182 431c Recovering log #1998
-2025/05/30-16:45:05.183 431c Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001998.log 
-2025/05/30-16:45:05.184 431c Delete type=2 #2000
-2025/05/30-16:45:05.184 431c Delete type=2 #2001
-2025/05/30-16:45:05.184 431c Delete type=2 #2002
-2025/05/30-16:45:05.184 431c Delete type=2 #2003
-2025/05/30-16:45:05.184 431c Delete type=2 #2004
-2025/05/30-16:45:05.184 431c Delete type=2 #2005
-2025/05/30-16:45:05.184 431c Delete type=2 #2006
-2025/05/30-16:45:05.184 431c Delete type=2 #2007
-2025/05/30-16:45:05.186 431c Delete type=2 #2008
-2025/05/30-16:45:05.187 431c Delete type=2 #2009
-2025/05/30-16:45:06.616 3454 Compacting 1@1 + 10@2 files
-2025/05/30-16:45:06.919 3454 Generated table #2001@1: 85667 keys, 2248671 bytes
-2025/05/30-16:45:07.339 3454 Generated table #2002@1: 33438 keys, 2194118 bytes
-2025/05/30-16:45:07.514 3454 Generated table #2003@1: 3579 keys, 2158622 bytes
-2025/05/30-16:45:07.659 3454 Level-0 table #2006: started
-2025/05/30-16:45:07.664 3454 Level-0 table #2006: 26980 bytes OK
-2025/05/30-16:45:07.679 3454 Delete type=0 #1998
-2025/05/30-16:45:07.706 3454 Generated table #2004@1: 3448 keys, 2157040 bytes
-2025/05/30-16:45:07.795 3454 Generated table #2007@1: 26256 keys, 2229634 bytes
-2025/05/30-16:45:07.867 3454 Generated table #2008@1: 23708 keys, 2198405 bytes
-2025/05/30-16:45:07.953 3454 Generated table #2009@1: 45496 keys, 2178562 bytes
-2025/05/30-16:45:08.062 3454 Generated table #2010@1: 98487 keys, 2249005 bytes
-2025/05/30-16:45:08.181 3454 Generated table #2011@1: 98519 keys, 2247953 bytes
-2025/05/30-16:45:08.197 3454 Generated table #2012@1: 12395 keys, 287265 bytes
-2025/05/30-16:45:08.197 3454 Compacted 1@1 + 10@2 files => 20149275 bytes
-2025/05/30-16:45:08.197 3454 compacted to: files[ 1 0 10 0 0 0 0 ]
-2025/05/30-16:45:08.198 3454 Manual compaction at level-0 from ' k\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' l\x01\x00\x00\x00' @ 0 : 0; will stop at ' k\x01\x00\x00\x05' @ 2493763 : 1
-2025/05/30-16:45:08.198 3454 Compacting 1@0 + 0@1 files
-2025/05/30-16:45:08.199 3454 Generated table #2013@0: 595 keys, 13103 bytes
-2025/05/30-16:45:08.199 3454 Compacted 1@0 + 0@1 files => 13103 bytes
-2025/05/30-16:45:08.200 3454 compacted to: files[ 0 1 10 0 0 0 0 ]
-2025/05/30-16:45:08.200 3454 Delete type=2 #2006
-2025/05/30-16:45:08.201 431c Manual compaction at level-0 from ' k\x01\x00\x00\x05' @ 2493763 : 1 .. ' l\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/05/30-16:45:09.662 3454 Compacting 1@1 + 6@2 files
-2025/05/30-16:45:09.759 3454 Generated table #2014@1: 85699 keys, 2246318 bytes
-2025/05/30-16:45:09.826 3454 Generated table #2015@1: 33507 keys, 2194063 bytes
-2025/05/30-16:45:09.855 3454 Generated table #2016@1: 3576 keys, 2156957 bytes
-2025/05/30-16:45:09.886 3454 Generated table #2017@1: 3439 keys, 2157764 bytes
-2025/05/30-16:45:09.954 3454 Generated table #2018@1: 26197 keys, 2229783 bytes
-2025/05/30-16:45:10.008 3454 Generated table #2019@1: 23744 keys, 2191275 bytes
-2025/05/30-16:45:10.009 3454 Generated table #2020@1: 36 keys, 14141 bytes
-2025/05/30-16:45:10.010 3454 Compacted 1@1 + 6@2 files => 13190301 bytes
-2025/05/30-16:45:10.010 3454 compacted to: files[ 0 0 11 0 0 0 0 ]
-2025/05/30-16:45:10.011 3454 Delete type=2 #1987
-2025/05/30-16:45:10.011 3454 Delete type=2 #1988
-2025/05/30-16:45:10.011 3454 Delete type=2 #1989
-2025/05/30-16:45:10.011 3454 Delete type=2 #1990
-2025/05/30-16:45:10.011 3454 Delete type=2 #1991
-2025/05/30-16:45:10.011 3454 Delete type=2 #1992
-2025/05/30-16:45:10.011 3454 Delete type=2 #1993
-2025/05/30-16:45:10.011 3454 Delete type=2 #1994
-2025/05/30-16:45:10.011 3454 Delete type=2 #1995
-2025/05/30-16:45:10.011 3454 Delete type=2 #1996
-2025/05/30-16:45:10.011 3454 Delete type=2 #1999
-2025/05/30-16:45:10.011 3454 Delete type=2 #2001
-2025/05/30-16:45:10.011 3454 Delete type=2 #2002
-2025/05/30-16:45:10.012 3454 Delete type=2 #2003
-2025/05/30-16:45:10.012 3454 Delete type=2 #2004
-2025/05/30-16:45:10.012 3454 Delete type=2 #2007
-2025/05/30-16:45:10.012 3454 Delete type=2 #2008
-2025/05/30-16:45:10.012 3454 Delete type=2 #2013
+2025/05/30-17:23:27.347 4944 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/05/30-17:23:27.350 4944 Recovering log #2099
+2025/05/30-17:23:27.367 4944 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/002099.log 
+2025/05/30-17:23:29.853 4944 Level-0 table #2113: started
+2025/05/30-17:23:29.860 4944 Level-0 table #2113: 185984 bytes OK
+2025/05/30-17:23:29.862 4944 Delete type=0 #2099
+2025/05/30-17:23:29.862 4944 Manual compaction at level-0 from ' u\x01\x00\x00\x00' @ 72057594037927935 : 1 .. ' v\x01\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/05/30-17:23:35.861 120 Compacting 1@1 + 10@2 files
+2025/05/30-17:23:36.036 120 Generated table #2114@1: 87478 keys, 2238162 bytes
+2025/05/30-17:23:36.149 120 Generated table #2115@1: 38557 keys, 2210629 bytes
+2025/05/30-17:23:36.196 120 Generated table #2116@1: 3426 keys, 2155397 bytes
+2025/05/30-17:23:36.250 120 Generated table #2117@1: 3255 keys, 2155127 bytes
+2025/05/30-17:23:36.336 120 Generated table #2118@1: 23503 keys, 2218589 bytes
+2025/05/30-17:23:36.406 120 Generated table #2119@1: 27196 keys, 2209454 bytes
+2025/05/30-17:23:36.463 120 Generated table #2120@1: 29512 keys, 2158414 bytes
+2025/05/30-17:23:36.573 120 Generated table #2121@1: 99747 keys, 2251314 bytes
+2025/05/30-17:23:36.700 120 Generated table #2122@1: 98556 keys, 2249492 bytes
+2025/05/30-17:23:36.728 120 Generated table #2123@1: 28750 keys, 658721 bytes
+2025/05/30-17:23:36.728 120 Compacted 1@1 + 10@2 files => 20505299 bytes
+2025/05/30-17:23:36.729 120 compacted to: files[ 0 0 10 0 0 0 0 ]
+2025/05/30-17:23:36.729 120 Delete type=2 #2101
+2025/05/30-17:23:36.729 120 Delete type=2 #2102
+2025/05/30-17:23:36.729 120 Delete type=2 #2103
+2025/05/30-17:23:36.730 120 Delete type=2 #2104
+2025/05/30-17:23:36.730 120 Delete type=2 #2105
+2025/05/30-17:23:36.730 120 Delete type=2 #2106
+2025/05/30-17:23:36.730 120 Delete type=2 #2107
+2025/05/30-17:23:36.730 120 Delete type=2 #2108
+2025/05/30-17:23:36.730 120 Delete type=2 #2109
+2025/05/30-17:23:36.730 120 Delete type=2 #2110
+2025/05/30-17:23:36.730 120 Delete type=2 #2113

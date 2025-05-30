@@ -1,8 +1,8 @@
 const express = require('express');
 const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
-const CreateCampaign = require('../controllers/CreateCampaign');
-const {AddContactGroup , getContacts , getContactsById} = require('../controllers/AddContacts');
+const {CreateCampaign , deleteCampaign} = require('../controllers/CreateCampaign');
+const {AddContactGroup , getContacts , getContactsById , deleteGroupContact} = require('../controllers/AddContacts');
 const getCampaignStats = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById')
 const uploadCSV = require('../controllers/uploadCSV');
@@ -14,8 +14,10 @@ module.exports = (io, client, isClientReadyRef) => {
     router.post('/upload', handleCsv);
     router.post('/campaign', CreateCampaign);
     router.post('/contacts', AddContactGroup);
+    router.delete('/contacts/:id', deleteGroupContact);
     router.get('/getcontacts', getContacts);
     router.get('/contacts/:id', getContactsById);
+    router.delete('/deleteCampaign/:id', deleteCampaign);
     router.get('/campaign-stats', getCampaignStats);
     router.get('/campaign/:id', getCampaignById);
     router.post('/upload-csv', uploadCSV);
@@ -24,6 +26,7 @@ module.exports = (io, client, isClientReadyRef) => {
     router.post('/chatbot/keywords', controller.saveKeywordGroup);
     router.get('/chatbot/keywords', controller.getAllKeywordGroups);
     router.get('/chatbot-conversations' , controller.getConversation)
+    router.get('/chatbotStats' , controller.getBotReplyStats)
 
     router.get('/client-info', async (req, res) => {
         try {

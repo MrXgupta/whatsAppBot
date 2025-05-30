@@ -17,23 +17,9 @@ const Campaigns = () => {
     const [minDelay, setMinDelay] = useState(20);
     const [maxDelay, setMaxDelay] = useState(30);
     const [groups, setGroups] = useState([]);
-    const [campaignStats, setCampaignStats] = useState([]);
     const [loading, setLoading] = useState(false);
     const [mediaFile, setMediaFile] = useState(null);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            setLoading(false);
-            try {
-                const { data } = await axios.get('http://localhost:3000/campaign-stats');
-                setCampaignStats(data.campaigns || []);
-                setLoading(true);
-            } catch (err) {
-                console.error('Error fetching campaign stats:', err);
-            }
-        };
-        fetchStats();
-    }, []);
 
     useEffect(() => {
         const fetchGroups = async () => {
@@ -87,7 +73,7 @@ const Campaigns = () => {
                 </div>
             )}
 
-            <CampaignStats campaignStats={campaignStats} />
+            <CampaignStats />
         </div>
     ) : (
         <Loader />

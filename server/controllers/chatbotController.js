@@ -84,3 +84,36 @@ exports.getConversation = async (req, res) => {
         });
     }
 };
+
+exports.getBotReplyStats = async (req, res) => {
+    try {
+        const conversations = await ChatbotConversation.find();
+
+        let totalReplies = 0;
+        let successCount = 0;
+        let failedCount = 0;
+
+        conversations.forEach(conv => {
+            conv.chats.forEach(chat => {
+                totalReplies++;
+                if (chat.response && chat.response.length > 0) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                }
+            });
+        });
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                total: totalReplies,
+                sent: successCount,
+                failed: failedCount
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching bot reply stats:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
