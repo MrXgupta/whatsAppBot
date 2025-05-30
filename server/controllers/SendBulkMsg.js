@@ -1,7 +1,6 @@
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const Message = require('../models/ChatBotKeywords');
 const ContactGroup = require('../models/Contact');
 const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');
@@ -29,7 +28,7 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
                 return res.status(404).json({ error: 'No contacts found in the selected group.' });
             }
 
-            // Filter valid numbers only
+
             const validNumbers = group.numbers.filter(isValidPhoneNumber);
 
             if (validNumbers.length === 0) {
@@ -47,10 +46,8 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
                 logs: [],
             });
 
-            // Respond immediately
             res.status(200).json({ success: true, campaignId: campaign._id, total: validNumbers.length });
 
-            // Background sending
             (async () => {
                 for (let i = 0; i < validNumbers.length; i++) {
                     const number = validNumbers[i];

@@ -30,7 +30,7 @@ const AddContactGroup = async (req, res) => {
                 let raw = row.number?.toString().trim();
                 if (!raw || raw.toLowerCase() === 'number') return;
 
-                // Handle scientific notation and type coercion
+
                 const cleanedNum = Number(raw).toString().replace(/\.0+$/, '');
                 if (cleanedNum.length >= 10) {
                     numbers.push(cleanedNum);

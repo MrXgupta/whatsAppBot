@@ -6,7 +6,6 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import Loader from "../Components/Loader";
-// import exampleCsv from "../assets/example.csv";
 const Contacts = () => {
     const fileRef = useRef();
     const { numbers } = useSelector(state => state.app);
@@ -38,7 +37,6 @@ const Contacts = () => {
 
             Swal.fire({ icon: 'success', title: 'Group Saved', text: 'Validation will complete shortly in the background.' });
 
-            // Reset form
             setGroupName("");
             setFilePath("");
             setShowForm(false);

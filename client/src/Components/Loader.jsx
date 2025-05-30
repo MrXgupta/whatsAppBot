@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 const Loader = () => {
     const [show, setShow] = useState(false);
 
-    // Ensure loader shows for at least 1s
     useEffect(() => {
         const timer = setTimeout(() => setShow(true), 200);
         return () => clearTimeout(timer);

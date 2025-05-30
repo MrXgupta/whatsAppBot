@@ -6,7 +6,7 @@ const {AddContactGroup , getContacts , getContactsById} = require('../controller
 const getCampaignStats = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById')
 const uploadCSV = require('../controllers/uploadCSV');
-const {addOrUpdateKeyword, getAllKeywords} = require('../controllers/chatBot');
+const controller = require('../controllers/chatbotController');
 
 module.exports = (io, client, isClientReadyRef) => {
     const router = express.Router();
@@ -19,8 +19,12 @@ module.exports = (io, client, isClientReadyRef) => {
     router.get('/campaign-stats', getCampaignStats);
     router.get('/campaign/:id', getCampaignById);
     router.post('/upload-csv', uploadCSV);
-    router.post('/keywords', addOrUpdateKeyword);
-    router.get('/keywords', getAllKeywords);
+    router.post('/chatbot/rules', controller.saveChatbotRule);
+    router.get('/chatbot/rules', controller.getAllChatbotRules);
+    router.post('/chatbot/keywords', controller.saveKeywordGroup);
+    router.get('/chatbot/keywords', controller.getAllKeywordGroups);
+    router.get('/chatbot-conversations' , controller.getConversation)
+
     router.get('/client-info', async (req, res) => {
         try {
             if (!isClientReadyRef?.value) {

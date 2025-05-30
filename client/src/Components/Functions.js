@@ -25,7 +25,7 @@ export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
             .then(data => {
                 console.log('Uploaded to backend:', data);
                 if (data.filePath) {
-                    setFilePath(data.filePath); // <-- Save the filePath in state
+                    setFilePath(data.filePath);
                 }
             })
             .catch(err => {
