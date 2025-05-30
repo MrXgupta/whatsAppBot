@@ -1,3 +1,4 @@
-2025/05/30-17:23:26.063 31b8 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
-2025/05/30-17:23:26.064 31b8 Recovering log #3
-2025/05/30-17:23:26.065 31b8 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\shared_proto_db\metadata/000003.log 
+2025/05/30-18:12:38.286 4dc0 Creating DB D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\shared_proto_db\metadata since it was missing.
+2025/05/30-18:12:38.294 4dc0 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2025/05/30-18:12:38.295 4dc0 Recovering log #3
+2025/05/30-18:12:38.295 4dc0 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\shared_proto_db\metadata/000003.log 

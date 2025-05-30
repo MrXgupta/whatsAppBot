@@ -1,3 +1,7 @@
-2025/05/30-17:23:27.236 4b28 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
-2025/05/30-17:23:27.239 4b28 Recovering log #3
-2025/05/30-17:23:27.247 4b28 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Session Storage/000003.log 
+2025/05/30-18:12:38.272 e5c Creating DB D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Session Storage since it was missing.
+2025/05/30-18:12:38.300 e5c Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
+2025/05/30-18:12:38.302 e5c Recovering log #3
+2025/05/30-18:12:38.308 e5c Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Session Storage/000003.log 
+2025/05/30-18:12:38.822 34c4 Level-0 table #5: started
+2025/05/30-18:12:38.837 34c4 Level-0 table #5: 16391 bytes OK
+2025/05/30-18:12:38.841 34c4 Delete type=0 #3

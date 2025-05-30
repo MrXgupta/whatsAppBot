@@ -111,11 +111,9 @@ module.exports = (io, isClientReadyRef) => {
             return [ruleKeyword.toLowerCase()];
         };
 
-
-
         let matchedRule = null;
-
         const lastRuleId = userContext.get(from);
+
         if (lastRuleId) {
             const childRules = chatbotRules.filter(r => r.parentRuleId?.toString() === lastRuleId.toString());
 
@@ -138,7 +136,11 @@ module.exports = (io, isClientReadyRef) => {
             }
 
             if (matchedRule) {
-                await message.reply(matchedRule.response);
+                try {
+                    await message.reply(matchedRule.response);
+                } catch (err) {
+                    console.warn('Failed to reply to child rule:', err.message);
+                }
                 userContext.set(from, matchedRule._id);
                 console.log(`🔁 Follow-up reply to '${from}' with: ${matchedRule.response}`);
                 return;
@@ -166,27 +168,37 @@ module.exports = (io, isClientReadyRef) => {
         }
 
         if (matchedRule) {
-            await message.reply(matchedRule.response);
+            try {
+                await message.reply(matchedRule.response);
+            } catch (err) {
+                console.warn('Failed to reply to root rule:', err.message);
+            }
             userContext.set(from, matchedRule._id);
             console.log(`🤖 Replied to '${from}' with: ${matchedRule.response}`);
+
             const normalizedFrom = from.split('@')[0];
-            await ChatbotConversation.findOneAndUpdate(
-                { number: normalizedFrom },
-                {
-                    $push: {
-                        chats: {
-                            query: incomingText,
-                            response: matchedRule.response,
-                            timestamp: new Date()
+            try {
+                await ChatbotConversation.findOneAndUpdate(
+                    { number: normalizedFrom },
+                    {
+                        $push: {
+                            chats: {
+                                query: incomingText,
+                                response: matchedRule.response,
+                                timestamp: new Date()
+                            }
                         }
-                    }
-                },
-                { upsert: true, new: true }
-            );
+                    },
+                    { upsert: true, new: true }
+                );
+            } catch (err) {
+                console.error('Failed to log conversation:', err.message);
+            }
         } else {
             console.log(`❌ No rule matched for: "${incomingText}" from ${from}`);
         }
     });
+
 
     client.initialize();
     return client;

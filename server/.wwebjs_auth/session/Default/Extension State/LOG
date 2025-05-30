@@ -1,3 +1,4 @@
-2025/05/30-17:23:26.213 120 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Extension State/MANIFEST-000001
-2025/05/30-17:23:26.214 120 Recovering log #3
-2025/05/30-17:23:26.214 120 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Extension State/000003.log 
+2025/05/30-18:12:38.307 4dc0 Creating DB D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Extension State since it was missing.
+2025/05/30-18:12:38.313 4dc0 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Extension State/MANIFEST-000001
+2025/05/30-18:12:38.314 4dc0 Recovering log #3
+2025/05/30-18:12:38.314 4dc0 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Extension State/000003.log 

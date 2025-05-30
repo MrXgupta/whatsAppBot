@@ -1,3 +1,4 @@
-2025/05/30-17:23:25.903 46a4 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Site Characteristics Database/MANIFEST-000001
-2025/05/30-17:23:25.904 46a4 Recovering log #3
-2025/05/30-17:23:25.904 46a4 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Site Characteristics Database/000003.log 
+2025/05/30-18:12:38.152 3bb4 Creating DB D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Site Characteristics Database since it was missing.
+2025/05/30-18:12:38.158 3bb4 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Site Characteristics Database/MANIFEST-000001
+2025/05/30-18:12:38.159 3bb4 Recovering log #3
+2025/05/30-18:12:38.159 3bb4 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Site Characteristics Database/000003.log 

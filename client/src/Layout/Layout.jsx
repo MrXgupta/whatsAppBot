@@ -6,7 +6,7 @@ const Layout = () => {
         <>
             <div className="flex">
             <NavBar />
-                <div className="border w-full">
+                <div className="border w-full min-h-full">
                     <Outlet />
                 </div>
             </div>
