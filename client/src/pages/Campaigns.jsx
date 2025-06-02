@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { handleSend } from "../Components/Functions.js";
 import axios from "axios";
-import Loader from "../components/loader";
-import CampaignForm from "../components/CampaignForm";
-import CampaignPreview from "../components/CampaignPreview";
-import CampaignStats from "../components/CampaignStats";
+import Loader from "../Components/Loader";
+import CampaignForm from "../Components/CampaignForm";
+import CampaignPreview from "../Components/CampaignPreview";
+import CampaignStats from "../Components/CampaignStats";
 
 const Campaigns = () => {
     const dispatch = useDispatch();
