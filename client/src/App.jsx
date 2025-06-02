@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import CampaignDetail from "./pages/CampaignDetail.jsx";
 import ChatBot from "./pages/ChatBot.jsx"
 import ChatBotConversation from "./pages/ChatBotConversation.jsx"
+import ReceivedMessages from "./pages/ReceivedMessages.jsx"
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/campaign/:id" element={<CampaignDetail />} />
                     <Route path="/chatbot" element={<ChatBot />} />
                     <Route path="/chatbot/logs" element={<ChatBotConversation />} />
+                    <Route path="/inbox" element={<ReceivedMessages />} />
                     <Route path="*" element={<Dashboard />} />
                 </Route>
             </Routes>

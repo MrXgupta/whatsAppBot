@@ -17,7 +17,7 @@ export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
         const formData = new FormData();
         formData.append('contactsFile', file);
 
-        fetch('http://localhost:3000/upload-csv', {
+        fetch('upload-csv', {
             method: 'POST',
             body: formData,
         })
@@ -37,23 +37,23 @@ export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
 
 
 
-export const handleAddNumber = (e, dispatch, numbers) => {
-    e.preventDefault();
-    const number = e.target.number.value.trim();
-    if (!number) return Swal.fire({icon: 'error', title: 'Error', text: 'Number is required'});
-    if (!/^[0-9]{12}$/.test(number)) return Swal.fire({
-        icon: 'error',
-        title: 'Invalid Number',
-        text: 'Enter 12-digit number incl. country code'
-    });
-    if (numbers.find(n => n.number === number)) return Swal.fire({
-        icon: 'warning',
-        title: 'Duplicate',
-        text: 'Number already exists'
-    });
-    dispatch(addNumber({number, status: ''}));
-    e.target.reset();
-};
+// export const handleAddNumber = (e, dispatch, numbers) => {
+//     e.preventDefault();
+//     const number = e.target.number.value.trim();
+//     if (!number) return Swal.fire({icon: 'error', title: 'Error', text: 'Number is required'});
+//     if (!/^[0-9]{12}$/.test(number)) return Swal.fire({
+//         icon: 'error',
+//         title: 'Invalid Number',
+//         text: 'Enter 12-digit number incl. country code'
+//     });
+//     if (numbers.find(n => n.number === number)) return Swal.fire({
+//         icon: 'warning',
+//         title: 'Duplicate',
+//         text: 'Number already exists'
+//     });
+//     dispatch(addNumber({number, status: ''}));
+//     e.target.reset();
+// };
 
 export const handleSend = async ({
                                      campaignName,

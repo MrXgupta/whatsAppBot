@@ -23,7 +23,7 @@ const Dashboard = () => {
     const [totalFailed, setTotalFailed] = useState(0);
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [botstats, setBotStats] = useState({})
+    const [botStats, setBotStats] = useState({})
 
 
     useEffect(() => {
@@ -169,15 +169,15 @@ const Dashboard = () => {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
                             <h4 className="text-sm text-gray-600">Total</h4>
-                            <p className="text-xl font-bold">{botstats.total}</p>
+                            <p className="text-xl font-bold">{botStats.total}</p>
                         </div>
                         <div>
                             <h4 className="text-sm text-gray-600">Successful</h4>
-                            <p className="text-xl font-bold text-green-600">{botstats.sent}</p>
+                            <p className="text-xl font-bold text-green-600">{botStats.sent}</p>
                         </div>
                         <div>
                             <h4 className="text-sm text-gray-600">Failed</h4>
-                            <p className="text-xl font-bold text-red-500">{botstats.failed}</p>
+                            <p className="text-xl font-bold text-red-500">{botStats.failed}</p>
                         </div>
                     </div>
                 ) : (

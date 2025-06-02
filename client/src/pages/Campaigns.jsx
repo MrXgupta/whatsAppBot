@@ -25,7 +25,7 @@ const Campaigns = () => {
         const fetchGroups = async () => {
             setLoading(false);
             try {
-                const { data } = await axios.get("http://localhost:3000/getContacts");
+                const { data } = await axios.get(`${import.meta.BASE_URL}/getContacts`);
                 setGroups(data.groups || []);
                 setLoading(true);
             } catch (err) {

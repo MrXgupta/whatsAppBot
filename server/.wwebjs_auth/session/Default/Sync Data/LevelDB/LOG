@@ -1,4 +1,3 @@
-2025/05/30-18:12:38.146 4dc0 Creating DB D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Sync Data\LevelDB since it was missing.
-2025/05/30-18:12:38.152 4dc0 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Sync Data\LevelDB/MANIFEST-000001
-2025/05/30-18:12:38.153 4dc0 Recovering log #3
-2025/05/30-18:12:38.154 4dc0 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Sync Data\LevelDB/000003.log 
+2025/06/02-10:21:38.083 11b0 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Sync Data\LevelDB/MANIFEST-000001
+2025/06/02-10:21:38.084 11b0 Recovering log #3
+2025/06/02-10:21:38.085 11b0 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\Sync Data\LevelDB/000003.log 

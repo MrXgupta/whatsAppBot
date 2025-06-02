@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Layers, Users, UserCircle, MoreHorizontal , Bot , MessageSquareQuote } from "lucide-react";
+import { LayoutDashboard, Layers, Users, UserCircle, MoreHorizontal , Bot , MessageSquareQuote , ScrollText } from "lucide-react";
 import logo from "../../public/logo.svg"
 
 const NavBar = () => {
@@ -12,6 +12,7 @@ const NavBar = () => {
         { to: "/profile", label: "Profile", icon: UserCircle },
         { to: "/chatbot", label: "Chat Bot", icon: Bot },
         { to: "/chatbot/logs", label: "ChatBot Replies", icon: MessageSquareQuote },
+        { to: "/inbox", label: "Inbox", icon: ScrollText },
     ];
 
     return (
