@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import Loader from '../components/Loader';
-import CampaignPreview from '../components/CampaignPreview';
+import Loader from '../Components/Loader';
+import CampaignPreview from '../Components/CampaignPreview';
 import { Undo2 } from "lucide-react";
 
 const CampaignDetail = () => {
