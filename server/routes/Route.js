@@ -43,15 +43,15 @@ module.exports = (io, clientInstance, isClientReadyRef) => {
 
         if (isActive) {
             resumeBot();
-            return res.json({ status: 'resumed' });
+            return res.json({ isActive: true, status: 'resumed' });
         } else {
             pauseBot();
-            return res.json({ status: 'paused' });
+            return res.json({ isActive: false, status: 'paused' });
         }
     });
-    
+
     router.get('/bot/status', (req, res) => {
-        res.json({ paused: isBotPaused() });
+        res.json({ isActive: !isBotPaused() });
     });
 
     // WhatsApp Client Info & Logout

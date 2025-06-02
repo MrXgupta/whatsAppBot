@@ -7,7 +7,6 @@ const Chatbot = () => {
     const [ruleKeyword, setRuleKeyword] = useState('');
     const [response, setResponse] = useState('');
     const [matchType, setMatchType] = useState('exact');
-
     const [keywordGroups, setKeywordGroups] = useState([]);
     const [groupName, setGroupName] = useState('');
     const [groupKeywords, setGroupKeywords] = useState('');
@@ -22,7 +21,7 @@ const Chatbot = () => {
         ]);
         setRules(rulesRes.data.rules || []);
         setKeywordGroups(keywordsRes.data.groups || []);
-        setIsBotActive(statusRes.data?.paused);
+        setIsBotActive(statusRes.data?.isActive);
         console.log(rulesRes.data, keywordsRes.data, statusRes.data);
     };
 
