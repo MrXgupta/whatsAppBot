@@ -1,3 +1,54 @@
-2025/06/02-15:47:48.618 2358 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/06/02-15:47:48.618 2358 Recovering log #658
-2025/06/02-15:47:48.640 2358 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000658.log 
+2025/06/02-15:48:39.262 2148 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/06/02-15:48:39.262 2148 Recovering log #658
+2025/06/02-15:48:39.277 2148 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000658.log 
+2025/06/02-15:48:42.232 5e0 Level-0 table #670: started
+2025/06/02-15:48:42.246 5e0 Level-0 table #670: 285912 bytes OK
+2025/06/02-15:48:42.247 5e0 Delete type=0 #658
+2025/06/02-15:48:42.251 5e0 Manual compaction at level-0 from '\x00K\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00L\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/06/02-15:48:44.625 1bd8 Compacting 1@1 + 9@2 files
+2025/06/02-15:48:44.716 1bd8 Generated table #671@1: 73573 keys, 2235978 bytes
+2025/06/02-15:48:44.784 1bd8 Generated table #672@1: 23143 keys, 2177102 bytes
+2025/06/02-15:48:44.823 1bd8 Generated table #673@1: 3664 keys, 2156950 bytes
+2025/06/02-15:48:44.863 1bd8 Generated table #674@1: 7031 keys, 2160408 bytes
+2025/06/02-15:48:44.939 1bd8 Generated table #675@1: 30683 keys, 2253526 bytes
+2025/06/02-15:48:44.976 1bd8 Generated table #676@1: 18456 keys, 2158479 bytes
+2025/06/02-15:48:45.033 1bd8 Generated table #677@1: 84814 keys, 2231209 bytes
+2025/06/02-15:48:45.094 1bd8 Generated table #678@1: 96085 keys, 2246135 bytes
+2025/06/02-15:48:45.110 1bd8 Generated table #679@1: 24084 keys, 565410 bytes
+2025/06/02-15:48:45.110 1bd8 Compacted 1@1 + 9@2 files => 18185197 bytes
+2025/06/02-15:48:45.110 1bd8 compacted to: files[ 0 0 9 0 0 0 0 ]
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #656
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #657
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #660
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #661
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #662
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #663
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #664
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #665
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #667
+2025/06/02-15:48:45.111 1bd8 Delete type=2 #670
+2025/06/02-15:54:11.987 5e0 Level-0 table #681: started
+2025/06/02-15:54:12.004 5e0 Level-0 table #681: 1135732 bytes OK
+2025/06/02-15:54:12.004 5e0 Delete type=0 #669
+2025/06/02-15:55:59.007 1bd8 Compacting 1@1 + 9@2 files
+2025/06/02-15:55:59.081 1bd8 Generated table #682@1: 74732 keys, 2237639 bytes
+2025/06/02-15:55:59.118 1bd8 Generated table #683@1: 23420 keys, 2178064 bytes
+2025/06/02-15:55:59.141 1bd8 Generated table #684@1: 3633 keys, 2156884 bytes
+2025/06/02-15:55:59.165 1bd8 Generated table #685@1: 6407 keys, 2159601 bytes
+2025/06/02-15:55:59.217 1bd8 Generated table #686@1: 30955 keys, 2252391 bytes
+2025/06/02-15:55:59.251 1bd8 Generated table #687@1: 18705 keys, 2162203 bytes
+2025/06/02-15:55:59.306 1bd8 Generated table #688@1: 83806 keys, 2230426 bytes
+2025/06/02-15:55:59.387 1bd8 Generated table #689@1: 96048 keys, 2245714 bytes
+2025/06/02-15:55:59.408 1bd8 Generated table #690@1: 25288 keys, 594201 bytes
+2025/06/02-15:55:59.408 1bd8 Compacted 1@1 + 9@2 files => 18217123 bytes
+2025/06/02-15:55:59.409 1bd8 compacted to: files[ 0 0 9 0 0 0 0 ]
+2025/06/02-15:55:59.410 1bd8 Delete type=2 #671
+2025/06/02-15:55:59.411 1bd8 Delete type=2 #672
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #673
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #674
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #675
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #676
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #677
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #678
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #679
+2025/06/02-15:55:59.412 1bd8 Delete type=2 #681

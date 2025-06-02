@@ -2,38 +2,13 @@ import React, {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import io from "socket.io-client";
 import Loader from "../Loader.jsx";
+import useClientInfo from "./userClientInfo.js"
 
-const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const LinkedAccount = () => {
-    const [clientInfo, setClientInfo] = useState(null);
+const { clientInfo, setClientInfo } = useClientInfo();
     const isLoggedOut = useRef(false);
     const [loading, setLoading] = useState(true);
-    useEffect(() => {
-        socket.on("client_info", (info) => {
-            if (!isLoggedOut.current) {
-                setClientInfo(info);
-            }
-        });
-        const fetchClientInfo = async () => {
-            if (isLoggedOut.current) return;
-            try {
-                const {data} = await axios.get(`${import.meta.env.VITE_BASE_URL}/client-info`);
-                setClientInfo(data);
-            } catch (err) {
-                console.warn("No cached client info available yet.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchClientInfo();
-
-        return () => {
-            socket.off("client_info");
-        };
-    }, []);
-
     const handleLogout = async () => {
         setLoading(true);
         try {

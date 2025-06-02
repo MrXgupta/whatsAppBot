@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Layers, Users, UserCircle, MoreHorizontal , Bot , MessageSquareQuote , ScrollText } from "lucide-react";
 import logo from "../../public/logo.svg"
+import useClientInfo from "./Profile/userClientInfo.js"
 
 const NavBar = () => {
     const location = useLocation();
+    const { clientInfo } = useClientInfo();
 
     const navItems = [
         { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -19,7 +21,7 @@ const NavBar = () => {
         <aside className="group w-20 hover:w-64 transition-all duration-300 bg-white shadow-md p-4 flex flex-col gap-6 overflow-hidden">
             <div className="flex items-center justify-between">
                 {/*<h1 className="text-center font-bold text-gray-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">WhatsApp Bulk Sender</h1>*/}
-                <img src={logo} alt="" className="w-full h-full" />
+                <img src={clientInfo?.profilePicUrl || logo} alt="" className="w-full h-full rounded-[50%]" />
             </div>
 
             <nav className="flex-1 flex flex-col gap-4">
