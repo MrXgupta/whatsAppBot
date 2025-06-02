@@ -7,13 +7,18 @@ const getCampaignStats = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatbotController');
-const botController = require('../whatsapp/initClient');
 
-module.exports = (io, client, isClientReadyRef) => {
+module.exports = (io, clientInstance, isClientReadyRef) => {
     const router = express.Router();
 
+    // Extract bot control functions from the clientInstance
+    const { client, pauseBot, resumeBot, isBotPaused } = clientInstance;
+
+    // Bulk Messaging Routes
     router.post('/send', ...sendBulkMsg(client, io, isClientReadyRef));
     router.post('/upload', handleCsv);
+
+    // Campaign & Contact Routes
     router.post('/campaign', CreateCampaign);
     router.post('/contacts', AddContactGroup);
     router.delete('/contacts/:id', deleteGroupContact);
@@ -33,18 +38,20 @@ module.exports = (io, client, isClientReadyRef) => {
     router.get('/chatbotStats', controller.getBotReplyStats);
 
     // Bot Control Routes
-    router.post('/bot/pause', (req, res) => {
-        botController.pauseBot();
-        res.json({ status: 'paused' });
-    });
+    router.post('/bot/status', (req, res) => {
+        const { isActive } = req.body;
 
-    router.post('/bot/resume', (req, res) => {
-        botController.resumeBot();
-        res.json({ status: 'resumed' });
+        if (isActive) {
+            resumeBot();
+            return res.json({ status: 'resumed' });
+        } else {
+            pauseBot();
+            return res.json({ status: 'paused' });
+        }
     });
-
+    
     router.get('/bot/status', (req, res) => {
-        res.json({ paused: botController.isBotPaused() });
+        res.json({ paused: isBotPaused() });
     });
 
     // WhatsApp Client Info & Logout
@@ -53,16 +60,19 @@ module.exports = (io, client, isClientReadyRef) => {
             if (!isClientReadyRef?.value) {
                 return res.status(404).json({ error: 'Not connected' });
             }
+
             const info = client.info;
             if (!info || !info.wid) {
                 return res.status(404).json({ error: 'Client info not available' });
             }
+
             let profilePicUrl = '';
             try {
                 profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
             } catch {
                 profilePicUrl = '';
             }
+
             res.json({
                 name: info.pushname || 'Unknown',
                 number: info.wid.user,

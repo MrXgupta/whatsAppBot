@@ -1,4 +1,29 @@
-2025/06/02-14:36:40.486 2dd8 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/06/02-14:36:40.486 2dd8 Recovering log #522
-2025/06/02-14:36:40.554 2dd8 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000522.log 
-2025/06/02-14:36:42.490 424c Manual compaction at level-0 from '\x00?\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00@\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/06/02-15:35:11.391 45dc Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/06/02-15:35:11.396 45dc Recovering log #592
+2025/06/02-15:35:11.448 45dc Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000592.log 
+2025/06/02-15:35:15.428 45dc Level-0 table #605: started
+2025/06/02-15:35:15.450 45dc Level-0 table #605: 270855 bytes OK
+2025/06/02-15:35:15.457 45dc Delete type=0 #592
+2025/06/02-15:35:15.462 45dc Manual compaction at level-0 from '\x00D\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00E\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/06/02-15:35:20.533 ff0 Compacting 1@1 + 9@2 files
+2025/06/02-15:35:20.882 ff0 Generated table #606@1: 67294 keys, 2229072 bytes
+2025/06/02-15:35:20.992 ff0 Generated table #607@1: 21341 keys, 2174651 bytes
+2025/06/02-15:35:21.181 ff0 Generated table #608@1: 3615 keys, 2156019 bytes
+2025/06/02-15:35:21.239 ff0 Generated table #609@1: 10631 keys, 2165932 bytes
+2025/06/02-15:35:21.387 ff0 Generated table #610@1: 29247 keys, 2252216 bytes
+2025/06/02-15:35:21.538 ff0 Generated table #611@1: 16645 keys, 2152914 bytes
+2025/06/02-15:35:21.691 ff0 Generated table #612@1: 92355 keys, 2240713 bytes
+2025/06/02-15:35:21.818 ff0 Generated table #613@1: 96133 keys, 2245749 bytes
+2025/06/02-15:35:21.845 ff0 Generated table #614@1: 15810 keys, 373145 bytes
+2025/06/02-15:35:21.845 ff0 Compacted 1@1 + 9@2 files => 17990411 bytes
+2025/06/02-15:35:21.846 ff0 compacted to: files[ 0 0 9 0 0 0 0 ]
+2025/06/02-15:35:21.847 ff0 Delete type=2 #594
+2025/06/02-15:35:21.847 ff0 Delete type=2 #595
+2025/06/02-15:35:21.847 ff0 Delete type=2 #596
+2025/06/02-15:35:21.848 ff0 Delete type=2 #597
+2025/06/02-15:35:21.848 ff0 Delete type=2 #598
+2025/06/02-15:35:21.848 ff0 Delete type=2 #599
+2025/06/02-15:35:21.848 ff0 Delete type=2 #600
+2025/06/02-15:35:21.848 ff0 Delete type=2 #601
+2025/06/02-15:35:21.848 ff0 Delete type=2 #602
+2025/06/02-15:35:21.848 ff0 Delete type=2 #605

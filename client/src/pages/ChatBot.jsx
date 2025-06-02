@@ -22,13 +22,13 @@ const Chatbot = () => {
         ]);
         setRules(rulesRes.data.rules || []);
         setKeywordGroups(keywordsRes.data.groups || []);
-        setIsBotActive(statusRes.data?.isActive);
+        setIsBotActive(statusRes.data?.paused);
         console.log(rulesRes.data, keywordsRes.data, statusRes.data);
     };
 
     const toggleBotStatus = async () => {
         const newStatus = !isBotActive;
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/status`, { isActive: newStatus });
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, { isActive: newStatus });
         setIsBotActive(newStatus);
     };
 

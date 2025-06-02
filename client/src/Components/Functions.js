@@ -17,7 +17,7 @@ export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
         const formData = new FormData();
         formData.append('contactsFile', file);
 
-        fetch('upload-csv', {
+        fetch(`${import.meta.env.VITE_BASE_URL}/upload-csv`, {
             method: 'POST',
             body: formData,
         })
