@@ -10,7 +10,7 @@ const CampaignStats = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const { data } = await axios.get('http://localhost:3000/campaign-stats');
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-stats`);
                 setCampaignStats(data.campaigns || []);
             } catch (err) {
                 console.error('Error fetching campaign stats:', err);
@@ -21,7 +21,7 @@ const CampaignStats = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`http://localhost:3000/deleteCampaign/${id}`);
+            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}deleteCampaign/${id}`);
             if(res.status === 200){
                 swal.fire({
                     icon: 'success',

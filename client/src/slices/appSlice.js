@@ -6,6 +6,7 @@ const initialState = {
     logs: { success: [], failed: [] },
     qr: '',
     clientReady: false,
+    qrStatus: 'idle',
 };
 
 const appSlice = createSlice({
@@ -40,12 +41,15 @@ const appSlice = createSlice({
         setClientReady: (state, action) => {
             state.clientReady = action.payload;
         },
+        setQrStatus: (state, action) => {
+            state.qrStatus = action.payload;
+        },
     },
 });
 
 export const {
     setNumbers, addNumber, updateStatus, setMessage,
-    setLogs, updateLogs, setQr, setClientReady
+    setLogs, updateLogs, setQr, setClientReady, setQrStatus
 } = appSlice.actions;
 
 export default appSlice.reducer;

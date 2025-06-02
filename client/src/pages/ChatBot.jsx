@@ -13,8 +13,8 @@ const Chatbot = () => {
 
     const fetchData = async () => {
         const [rulesRes, keywordsRes] = await Promise.all([
-            axios.get('http://localhost:3000/chatbot/rules'),
-            axios.get('http://localhost:3000/chatbot/keywords')
+            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`),
+            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`)
         ]);
         setRules(rulesRes.data.rules || []);
         setKeywordGroups(keywordsRes.data.groups || []);
@@ -26,7 +26,7 @@ const Chatbot = () => {
 
     const handleSaveRule = async () => {
         if (!ruleKeyword || !response) return alert('Please fill all fields.');
-        await axios.post('http://localhost:3000/chatbot/rules', {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`, {
             keyword: ruleKeyword,
             response,
             matchType
@@ -39,7 +39,7 @@ const Chatbot = () => {
 
     const handleSaveKeywordGroup = async () => {
         if (!groupName || !groupKeywords) return alert('Please fill all fields.');
-        await axios.post('http://localhost:3000/chatbot/keywords', {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`, {
             groupName,
             keywords: groupKeywords.split(',').map(k => k.trim())
         });

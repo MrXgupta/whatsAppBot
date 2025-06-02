@@ -11,9 +11,10 @@ import {
 import axios from 'axios';
 import LinkedAccount from '../Components/LinkedAccount';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { subDays, subMonths, isAfter, isBefore, parseISO } from 'date-fns';
 import Loader from '../Components/Loader';
 
-const socket = io('http://localhost:3000');
+const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const Dashboard = () => {
     const dispatch = useDispatch();
@@ -24,6 +25,8 @@ const Dashboard = () => {
     const [progress, setProgress] = useState(0);
     const [loading, setLoading] = useState(false);
     const [botStats, setBotStats] = useState({})
+    const [selectedRange, setSelectedRange] = useState('28days');
+    const [customRange, setCustomRange] = useState({ start: '', end: '' });
 
 
     useEffect(() => {
@@ -62,7 +65,7 @@ const Dashboard = () => {
         const fetchStats = async () => {
             setLoading(false);
             try {
-                const { data } = await axios.get('http://localhost:3000/campaign-stats');
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-stats`);
                 setCampaignStats(data.campaigns || []);
                 setTotalSent(data.totalSent || 0);
                 setTotalFailed(data.totalFailed || 0);
@@ -88,20 +91,46 @@ const Dashboard = () => {
     };
 
     const groupedByDate = useMemo(() => {
+        const now = new Date();
+        let filtered = [];
+
+        if (selectedRange === '28days') {
+            const startDate = subDays(now, 28);
+            filtered = campaignStats.filter(c => parseISO(c.sentAt) >= startDate);
+        } else if (selectedRange === '3months') {
+            const startDate = subMonths(now, 3);
+            filtered = campaignStats.filter(c => parseISO(c.sentAt) >= startDate);
+        } else if (selectedRange === 'custom' && customRange.start && customRange.end) {
+            const start = new Date(customRange.start);
+            const end = new Date(customRange.end);
+            filtered = campaignStats.filter(c => {
+                const date = parseISO(c.sentAt);
+                return date >= start && date <= end;
+            });
+        } else {
+            filtered = campaignStats;
+        }
+
         const map = {};
-        campaignStats.forEach(c => {
+        filtered.forEach(c => {
             const date = c.sentAt?.split('T')[0];
             if (!map[date]) map[date] = { sent: 0, failed: 0 };
             map[date].sent += c.sent;
             map[date].failed += c.failed;
         });
-        return Object.entries(map).map(([date, stats]) => ({ date, ...stats }));
-    }, [campaignStats]);
+
+        return Object.entries(map)
+            .map(([date, stats]) => ({ date, ...stats }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }, [campaignStats, selectedRange, customRange]);
+
+
+
 
     useEffect(() => {
         const fetchBotStats = async () => {
             try {
-                const res = await axios.get('http://localhost:3000/chatbotStats');
+                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/chatbotStats`);
                 if (res.data.success) {
                     setBotStats(res.data.stats);
                 }
@@ -114,6 +143,26 @@ const Dashboard = () => {
 
         fetchBotStats();
     }, []);
+
+    const filterByDateRange = (data, range) => {
+        const now = new Date();
+        let startDate;
+
+        if (range === '28days') {
+            startDate = subDays(now, 28);
+        } else if (range === '3months') {
+            startDate = subMonths(now, 3);
+        } else if (range?.start && range?.end) {
+            startDate = new Date(range.start);
+            const endDate = new Date(range.end);
+            return data.filter(c => {
+                const date = parseISO(c.sentAt);
+                return isAfter(date, startDate) && isBefore(date, endDate);
+            });
+        }
+
+        return data.filter(c => isAfter(parseISO(c.sentAt), startDate));
+    };
 
     return (
         <>
@@ -146,21 +195,61 @@ const Dashboard = () => {
                 <p className="text-sm mt-1">{progress}% complete</p>
             </div>
 
-            {groupedByDate.length > 0 && (
-                <div className="bg-white p-4 rounded shadow mt-6">
-                    <h3 className="text-lg font-semibold mb-4">📊 Messaging Trends</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={groupedByDate}>
-                            <XAxis dataKey="date" />
-                            <YAxis />
-                            <Tooltip />
-                            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-                            <Line type="monotone" dataKey="sent" stroke="#22c55e" />
-                            <Line type="monotone" dataKey="failed" stroke="#ef4444" />
-                        </LineChart>
-                    </ResponsiveContainer>
+            <div className="m-4 flex flex-col items-end">
+                <div className="flex items-center  gap-4 mb-4">
+                    <select
+                        className="border p-2 rounded"
+                        value={selectedRange}
+                        onChange={(e) => setSelectedRange(e.target.value)}
+                    >
+                        <option value="28days">Last 28 Days</option>
+                        <option value="3months">Last 3 Months</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+
+                    {selectedRange === 'custom' && (
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                className="border p-2 rounded"
+                                value={customRange.start}
+                                onChange={(e) => setCustomRange(prev => ({ ...prev, start: e.target.value }))}
+                            />
+                            <input
+                                type="date"
+                                className="border p-2 rounded"
+                                value={customRange.end}
+                                onChange={(e) => setCustomRange(prev => ({ ...prev, end: e.target.value }))}
+                            />
+                        </div>
+                    )}
                 </div>
-            )}
+                <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={groupedByDate}>
+                    <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 14, fontWeight: 600 }} />
+                    <YAxis tick={{ fontSize: 14, fontWeight: 600 }} />
+                    <Tooltip
+                        contentStyle={{ fontWeight: "bold", backgroundColor: "#f9fafb", border: "1px solid #ddd" }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="sent"
+                        stroke="#16a34a"
+                        strokeWidth={3}
+                        dot={{ r: 5 }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="failed"
+                        stroke="#dc2626"
+                        strokeWidth={3}
+                        dot={{ r: 5 }}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+            </div>
+
 
 
             <div className="bg-white p-4 rounded shadow my-6">

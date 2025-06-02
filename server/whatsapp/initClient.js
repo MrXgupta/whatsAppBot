@@ -8,8 +8,9 @@ module.exports = (io, isClientReadyRef) => {
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
+            devtools: true,
             executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
         },
     });
 

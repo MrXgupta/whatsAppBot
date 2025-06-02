@@ -19,7 +19,7 @@ const ChatbotLogs = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await axios.get('http://localhost:3000/chatbot-conversations');
+                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot-conversations`);
                 if (res.data.success) {
                     setLogs(res.data.conversation);
                     console.log(res.data);

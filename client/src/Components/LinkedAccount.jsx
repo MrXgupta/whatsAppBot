@@ -3,7 +3,7 @@ import axios from "axios";
 import io from "socket.io-client";
 import Loader from "./Loader";
 
-const socket = io("http://localhost:3000");
+const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const LinkedAccount = () => {
     const [clientInfo, setClientInfo] = useState(null);
@@ -18,11 +18,12 @@ const LinkedAccount = () => {
         const fetchClientInfo = async () => {
             if (isLoggedOut.current) return;
             try {
-                const {data} = await axios.get("http://localhost:3000/client-info");
+                const {data} = await axios.get(`${import.meta.env.VITE_BASE_URL}/client-info`);
                 setClientInfo(data);
-                setLoading(false);
             } catch (err) {
                 console.warn("No cached client info available yet.");
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -36,7 +37,7 @@ const LinkedAccount = () => {
     const handleLogout = async () => {
         setLoading(true);
         try {
-            const {data} = await axios.post("http://localhost:3000/logout");
+            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/logout`);
             if (data.success) {
                 isLoggedOut.current = true;
                 setClientInfo(null);
@@ -46,6 +47,8 @@ const LinkedAccount = () => {
         } catch (err) {
             console.error("Logout failed", err);
             Swal.fire("Error", "Could not logout.", "error");
+        } finally {
+            setLoading(false);
         }
     };
 

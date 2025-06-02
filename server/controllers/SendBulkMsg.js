@@ -10,9 +10,10 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const SendBulkMsg = (client, io, isClientReadyRef) => {
     const handler = async (req, res) => {
-        const { campaignName, groupId, message, minDelay, maxDelay } = req.body;
+        let { campaignName, groupId, message, minDelay, maxDelay } = req.body;
+        minDelay = Math.max(1, Number(minDelay) || 30);
+        maxDelay = Math.max(minDelay, Number(maxDelay) || minDelay + 45);
         const mediaFile = req.file;
-        console.log("media file " , mediaFile)
 
         if (!isClientReadyRef.value) {
             return res.status(503).json({ error: 'WhatsApp client is not ready.' });
@@ -27,7 +28,6 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
             if (!group || !Array.isArray(group.numbers) || group.numbers.length === 0) {
                 return res.status(404).json({ error: 'No contacts found in the selected group.' });
             }
-
 
             const validNumbers = group.numbers.filter(isValidPhoneNumber);
 
@@ -87,9 +87,7 @@ const SendBulkMsg = (client, io, isClientReadyRef) => {
                 campaign.status = 'completed';
                 await campaign.save();
             })();
-
         } catch (err) {
-            console.error('❌ Error in SendBulkMsg:', err);
             return res.status(500).json({ error: 'Server error while initiating campaign.' });
         }
     };

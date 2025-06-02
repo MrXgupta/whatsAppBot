@@ -31,7 +31,7 @@ const Contacts = () => {
         try {
             setLoading(true);
 
-            const {data} = await axios.post("http://localhost:3000/contacts", {
+            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/contacts`, {
                 groupName,
                 filePath,
             });
@@ -60,7 +60,7 @@ const Contacts = () => {
     const fetchGroups = async () => {
         setLoading(false);
         try {
-            const {data} = await axios.get("http://localhost:3000/getContacts");
+            const {data} = await axios.get(`${import.meta.env.VITE_BASE_URL}/getContacts`);
             setGroups(data.groups || []);
             setLoading(true)
         } catch (err) {
@@ -74,7 +74,7 @@ const Contacts = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`http://localhost:3000/contacts/${id}`);
+            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/contacts/${id}`);
             Swal.fire({icon: 'success', title: 'Group Deleted', text: 'Group deleted successfully.'});
             setFetch(!fetch)
         } catch (err) {

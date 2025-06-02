@@ -84,7 +84,7 @@ export const handleSend = async ({
             console.log('📤 Appended media file:', mediaFile);
         }
 
-        await axios.post('http://localhost:3000/send', formData, {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/send`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         }).then(({ data }) => {
             const { total } = data;

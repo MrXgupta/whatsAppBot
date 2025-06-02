@@ -12,7 +12,7 @@ const ShowContacts = () => {
     useEffect(() => {
         const fetchGroup = async () => {
             try {
-                const { data } = await axios.get(`http://localhost:3000/contacts/${id}`);
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/contacts/${id}`);
                 setGroup(data);
             } catch (error) {
                 console.error("Failed to fetch group details:", error);

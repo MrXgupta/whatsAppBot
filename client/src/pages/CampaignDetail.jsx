@@ -11,7 +11,7 @@ const CampaignDetail = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get(`http://localhost:3000/campaign/${id}`)
+        axios.get(`${import.meta.env.VITE_BASE_URL}/campaign/${id}`)
             .then(res => {
                 if (res.data.success) {
                     setCampaign(res.data.data);
