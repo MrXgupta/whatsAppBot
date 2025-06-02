@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import io from "socket.io-client";
 import Swal from "sweetalert2";
-import QR from "../Components/Qr.jsx";
-import LinkedAccount from "../Components/LinkedAccount.jsx";
+import QR from "../Components/Profile/Qr.jsx";
+import LinkedAccount from "../Components/Profile/LinkedAccount.jsx";
 import { setQr, setClientReady, setQrStatus } from "../slices/appSlice.js";
 
 const socket = io(`${import.meta.env.VITE_BASE_URL}`);

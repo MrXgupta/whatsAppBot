@@ -106,8 +106,10 @@ const getContacts = async (req, res) => {
     }
 };
 
+
 const getContactsById = async (req, res) => {
     const { id } = req.params;
+    const { type = 'all', page = 1, limit = 10 } = req.query;
 
     try {
         const group = await Contacts.findById(id);
@@ -115,7 +117,35 @@ const getContactsById = async (req, res) => {
             return res.status(404).json({ error: 'Group not found' });
         }
 
-        res.status(200).json(group);
+        let numbersToSend = [];
+        if (type === 'valid') {
+            numbersToSend = group.validNumbers;
+        } else if (type === 'invalid') {
+            numbersToSend = group.invalidNumbers;
+        } else {
+            numbersToSend = group.numbers;
+        }
+
+        const total = numbersToSend.length;
+        const start = (parseInt(page) - 1) * parseInt(limit);
+        const end = start + parseInt(limit);
+        const paginatedNumbers = numbersToSend.slice(start, end);
+
+        res.status(200).json({
+            groupInfo: {
+                groupName: group.groupName,
+                addedAt: group.addedAt,
+                validationStatus: group.validationStatus,
+                totalContacts: group.numbers.length,
+                totalValid: group.validNumbers.length,
+                totalInvalid: group.invalidNumbers.length,
+                duplicatesRemoved: group.duplicatesRemoved
+            },
+            numbers: paginatedNumbers,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit))
+        });
     } catch (err) {
         console.error('❌ Error fetching group by ID:', err);
         res.status(500).json({ error: 'Failed to get the details' });

@@ -5,26 +5,33 @@ import { Undo2 } from "lucide-react";
 
 const ShowContacts = () => {
     const { id } = useParams();
-    const [group, setGroup] = useState(null);
+    const [groupInfo, setGroupInfo] = useState(null);
+    const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState("valid");
+    const [tab, setTab] = useState("all");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const fetchContacts = async (type = tab, pageNum = page) => {
+        try {
+            setLoading(true);
+            const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/contacts/${id}?type=${type}&page=${pageNum}&limit=50`);
+            setGroupInfo(data.groupInfo);
+            setContacts(data.numbers);
+            setTotalPages(data.totalPages);
+        } catch (error) {
+            console.error("Failed to fetch group details:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchGroup = async () => {
-            try {
-                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/contacts/${id}`);
-                setGroup(data);
-            } catch (error) {
-                console.error("Failed to fetch group details:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchGroup();
-    }, [id]);
+        fetchContacts();
+    }, [id, tab, page]);
 
     if (loading) return <div className="p-6">Loading...</div>;
-    if (!group) return <div className="p-6 text-red-600">Group not found.</div>;
+    if (!groupInfo) return <div className="p-6 text-red-600">Group not found.</div>;
 
     return (
         <div className="p-6">
@@ -32,33 +39,29 @@ const ShowContacts = () => {
                 <button onClick={() => history.back()} className="text-gray-600 hover:text-black">
                     <Undo2 />
                 </button>
-                <h1 className="text-2xl font-semibold">📁 {group.groupName}</h1>
+                <h1 className="text-2xl font-semibold">📁 {groupInfo.groupName}</h1>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <p><strong>📅 Added On:</strong> {new Date(group.addedAt).toLocaleString()}</p>
-                <p><strong>📦 Total Numbers:</strong> {group.numbers.length}</p>
-                <p className="text-green-600"><strong>✅ Valid:</strong> {group.validNumbers.length}</p>
-                <p className="text-red-500"><strong>❌ Invalid:</strong> {group.invalidNumbers.length}</p>
-                <p className="text-red-500"><strong>❌ Duplicate (Removed):</strong> {group.duplicatesRemoved}</p>
-                <p><strong>🔍 Status:</strong> {group.validationStatus}</p>
+                <p><strong>📅 Added On:</strong> {new Date(groupInfo.addedAt).toLocaleString()}</p>
+                <p><strong>📦 Total Numbers:</strong> {groupInfo.totalContacts}</p>
+                <p className="text-green-600"><strong>✅ Valid:</strong> {groupInfo.totalValid}</p>
+                <p className="text-red-500"><strong>❌ Invalid:</strong> {groupInfo.totalInvalid}</p>
+                <p className="text-red-500"><strong>❌ Duplicate (Removed):</strong> {groupInfo.duplicatesRemoved}</p>
+                <p><strong>🔍 Status:</strong> {groupInfo.validationStatus}</p>
             </div>
 
             <div className="flex gap-4 mb-4">
-                <button
-                    onClick={() => setTab("valid")}
-                    className={`px-4 py-2 rounded ${tab === "valid" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-800"}`}
-                >
-                    ✅ Valid Numbers
-                </button>
-                <button
-                    onClick={() => setTab("invalid")}
-                    className={`px-4 py-2 rounded ${tab === "invalid" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-800"}`}
-                >
-                    ❌ Invalid Numbers
-                </button>
+                {['all', 'valid', 'invalid'].map(t => (
+                    <button
+                        key={t}
+                        onClick={() => { setTab(t); setPage(1); }}
+                        className={`px-4 py-2 rounded ${tab === t ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"}`}
+                    >
+                        {t === 'all' ? '📋 All Contacts' : t === 'valid' ? '✅ Valid' : '❌ Invalid'}
+                    </button>
+                ))}
             </div>
-
 
             <div className="bg-white shadow rounded-lg overflow-auto">
                 <table className="min-w-full text-sm text-left border border-gray-200">
@@ -70,22 +73,37 @@ const ShowContacts = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {(tab === "valid" ? group.validNumbers : group.invalidNumbers).map((number, index) => (
+                    {contacts.map((number, index) => (
                         <tr key={index} className="border-t">
-                            <td className="p-3">{index + 1}</td>
+                            <td className="p-3">{(page - 1) * 10 + index + 1}</td>
                             <td className="p-3 font-mono">{number}</td>
-                            <td className={`p-3 font-semibold ${tab === "valid" ? "text-green-600" : "text-red-500"}`}>
-                                {tab === "valid" ? "Valid" : "Invalid"}
+                            <td className={`p-3 font-semibold ${tab === 'invalid' ? 'text-red-500' : 'text-green-600'}`}>
+                                {tab === 'invalid' ? 'Invalid' : tab === 'valid' ? 'Valid' : (groupInfo.validNumbers?.includes(number) ? 'Valid' : 'Invalid')}
                             </td>
                         </tr>
                     ))}
-                    {(tab === "valid" ? group.validNumbers.length : group.invalidNumbers.length) === 0 && (
+                    {contacts.length === 0 && (
                         <tr>
                             <td colSpan="3" className="p-4 text-center text-gray-500">No numbers found</td>
                         </tr>
                     )}
                     </tbody>
                 </table>
+
+                {/* Pagination Controls */}
+                <div className="flex justify-between items-center p-4 border-t">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                    >Previous</button>
+                    <span>Page {page} of {totalPages}</span>
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+                    >Next</button>
+                </div>
             </div>
         </div>
     );

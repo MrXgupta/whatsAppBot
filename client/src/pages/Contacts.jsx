@@ -1,6 +1,6 @@
 import {handleFileUpload} from "../Components/Functions.js";
 import React, {useEffect, useRef, useState} from "react";
-import PreviewTable from "../Components/PreviewTable.jsx";
+import PreviewTable from "../Components/Contacts/PreviewTable.jsx";
 import {useDispatch, useSelector} from "react-redux";
 import axios from "axios";
 import Swal from "sweetalert2";
