@@ -106,7 +106,6 @@ const getContacts = async (req, res) => {
     }
 };
 
-
 const getContactsById = async (req, res) => {
     const { id } = req.params;
     const { type = 'all', page = 1, limit = 10 } = req.query;

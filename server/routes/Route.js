@@ -1,15 +1,17 @@
 const express = require('express');
 const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
-const {CreateCampaign , deleteCampaign} = require('../controllers/CreateCampaign');
-const {AddContactGroup , getContacts , getContactsById , deleteGroupContact} = require('../controllers/AddContacts');
+const { CreateCampaign, deleteCampaign } = require('../controllers/CreateCampaign');
+const { AddContactGroup, getContacts, getContactsById, deleteGroupContact } = require('../controllers/AddContacts');
 const getCampaignStats = require('../controllers/getCampaignStats');
-const getCampaignById = require('../controllers/GetCampaignById')
+const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatbotController');
+const botController = require('../whatsapp/initClient');
 
 module.exports = (io, client, isClientReadyRef) => {
     const router = express.Router();
+
     router.post('/send', ...sendBulkMsg(client, io, isClientReadyRef));
     router.post('/upload', handleCsv);
     router.post('/campaign', CreateCampaign);
@@ -21,13 +23,31 @@ module.exports = (io, client, isClientReadyRef) => {
     router.get('/campaign-stats', getCampaignStats);
     router.get('/campaign/:id', getCampaignById);
     router.post('/upload-csv', uploadCSV);
+
+    // Chatbot Routes
     router.post('/chatbot/rules', controller.saveChatbotRule);
     router.get('/chatbot/rules', controller.getAllChatbotRules);
     router.post('/chatbot/keywords', controller.saveKeywordGroup);
     router.get('/chatbot/keywords', controller.getAllKeywordGroups);
-    router.get('/chatbot-conversations' , controller.getConversation)
-    router.get('/chatbotStats' , controller.getBotReplyStats)
+    router.get('/chatbot-conversations', controller.getConversation);
+    router.get('/chatbotStats', controller.getBotReplyStats);
 
+    // Bot Control Routes
+    router.post('/bot/pause', (req, res) => {
+        botController.pauseBot();
+        res.json({ status: 'paused' });
+    });
+
+    router.post('/bot/resume', (req, res) => {
+        botController.resumeBot();
+        res.json({ status: 'resumed' });
+    });
+
+    router.get('/bot/status', (req, res) => {
+        res.json({ paused: botController.isBotPaused() });
+    });
+
+    // WhatsApp Client Info & Logout
     router.get('/client-info', async (req, res) => {
         try {
             if (!isClientReadyRef?.value) {
@@ -67,5 +87,6 @@ module.exports = (io, client, isClientReadyRef) => {
             res.status(500).json({ error: "Logout failed." });
         }
     });
+
     return router;
 };

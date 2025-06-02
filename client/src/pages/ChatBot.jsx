@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import gsap from 'gsap';
 
 const Chatbot = () => {
     const [rules, setRules] = useState([]);
@@ -11,17 +12,29 @@ const Chatbot = () => {
     const [groupName, setGroupName] = useState('');
     const [groupKeywords, setGroupKeywords] = useState('');
 
+    const [isBotActive, setIsBotActive] = useState(true);
+
     const fetchData = async () => {
-        const [rulesRes, keywordsRes] = await Promise.all([
+        const [rulesRes, keywordsRes, statusRes] = await Promise.all([
             axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`),
-            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`)
+            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`),
+            axios.get(`${import.meta.env.VITE_BASE_URL}/bot/status`)
         ]);
         setRules(rulesRes.data.rules || []);
         setKeywordGroups(keywordsRes.data.groups || []);
+        setIsBotActive(statusRes.data?.isActive);
+        console.log(rulesRes.data, keywordsRes.data, statusRes.data);
+    };
+
+    const toggleBotStatus = async () => {
+        const newStatus = !isBotActive;
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/status`, { isActive: newStatus });
+        setIsBotActive(newStatus);
     };
 
     useEffect(() => {
         fetchData();
+        gsap.from(".fade-in", { opacity: 0, y: 30, duration: 0.8, stagger: 0.2 });
     }, []);
 
     const handleSaveRule = async () => {
@@ -50,10 +63,21 @@ const Chatbot = () => {
 
     return (
         <div className="p-6 space-y-8">
-            <h2 className="text-2xl font-bold">Chatbot Manager</h2>
+            <h2 className="text-2xl font-bold fade-in">Chatbot Manager</h2>
 
-            {/* Chatbot Rule Form */}
-            <div className="border p-4 rounded-lg shadow space-y-3">
+            <div className="flex items-center space-x-4 fade-in">
+                <span className={`text-sm font-medium ${isBotActive ? 'text-green-600' : 'text-red-600'}`}>
+                    Status: {isBotActive ? 'Active' : 'Paused'}
+                </span>
+                <button
+                    onClick={toggleBotStatus}
+                    className={`px-4 py-2 rounded text-white ${isBotActive ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+                >
+                    {isBotActive ? 'Pause Bot' : 'Resume Bot'}
+                </button>
+            </div>
+
+            <div className="border p-4 rounded-lg shadow space-y-3 fade-in">
                 <h3 className="font-semibold text-lg">Add Chatbot Rule</h3>
                 <input
                     type="text"
@@ -87,8 +111,7 @@ const Chatbot = () => {
                 </button>
             </div>
 
-            {/* Keyword Group Form */}
-            <div className="border p-4 rounded-lg shadow space-y-3">
+            <div className="border p-4 rounded-lg shadow space-y-3 fade-in">
                 <h3 className="font-semibold text-lg">Add Keyword Group</h3>
                 <input
                     type="text"
@@ -112,10 +135,7 @@ const Chatbot = () => {
                 </button>
             </div>
 
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* Chatbot Rules Table */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in">
                 <div className="bg-white shadow-md rounded-xl overflow-hidden">
                     <h3 className="text-xl font-semibold bg-gray-100 px-6 py-4 border-b">🤖 All Chatbot Rules</h3>
                     <div className="overflow-x-auto">
@@ -143,7 +163,6 @@ const Chatbot = () => {
                     </div>
                 </div>
 
-                {/* Keyword Groups Table */}
                 <div className="bg-white shadow-md rounded-xl overflow-hidden">
                     <h3 className="text-xl font-semibold bg-gray-100 px-6 py-4 border-b">🧩 All Keyword Groups</h3>
                     <div className="overflow-x-auto">
@@ -160,7 +179,7 @@ const Chatbot = () => {
                                     key={i}
                                     className="border-t hover:bg-gray-50 transition duration-200"
                                 >
-                                    <td className="px-6 py-3 font-semibold">{g.groupName}</td>
+                                    <td className="px-6 py-3 font-semibold">{g.groupName || "Fetching"}</td>
                                     <td className="px-6 py-3">{g.keywords?.join(', ')}</td>
                                 </tr>
                             ))}
@@ -168,9 +187,7 @@ const Chatbot = () => {
                         </table>
                     </div>
                 </div>
-
             </div>
-
         </div>
     );
 };

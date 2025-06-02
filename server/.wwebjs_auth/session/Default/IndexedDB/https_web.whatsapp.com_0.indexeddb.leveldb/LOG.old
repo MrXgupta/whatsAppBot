@@ -1,27 +1,4 @@
-2025/06/02-12:53:36.135 149c Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/06/02-12:53:36.136 149c Recovering log #378
-2025/06/02-12:53:36.154 149c Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000378.log 
-2025/06/02-12:53:38.826 1ca4 Level-0 table #390: started
-2025/06/02-12:53:38.853 1ca4 Level-0 table #390: 501537 bytes OK
-2025/06/02-12:53:38.858 1ca4 Delete type=0 #378
-2025/06/02-12:53:38.859 1ca4 Manual compaction at level-0 from '\x003\x00\x00\x00' @ 72057594037927935 : 1 .. '\x004\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/06/02-12:53:41.454 2694 Compacting 1@1 + 8@2 files
-2025/06/02-12:53:41.546 2694 Generated table #391@1: 54185 keys, 2215919 bytes
-2025/06/02-12:53:41.589 2694 Generated table #392@1: 4840 keys, 2155794 bytes
-2025/06/02-12:53:41.632 2694 Generated table #393@1: 3677 keys, 2158113 bytes
-2025/06/02-12:53:41.678 2694 Generated table #394@1: 19143 keys, 2200928 bytes
-2025/06/02-12:53:41.739 2694 Generated table #395@1: 30219 keys, 2231252 bytes
-2025/06/02-12:53:41.786 2694 Generated table #396@1: 35979 keys, 2165495 bytes
-2025/06/02-12:53:41.864 2694 Generated table #397@1: 96533 keys, 2247721 bytes
-2025/06/02-12:53:41.918 2694 Generated table #398@1: 75780 keys, 1772985 bytes
-2025/06/02-12:53:41.919 2694 Compacted 1@1 + 8@2 files => 17148207 bytes
-2025/06/02-12:53:41.919 2694 compacted to: files[ 0 0 8 0 0 0 0 ]
-2025/06/02-12:53:41.920 2694 Delete type=2 #380
-2025/06/02-12:53:41.920 2694 Delete type=2 #381
-2025/06/02-12:53:41.921 2694 Delete type=2 #382
-2025/06/02-12:53:41.921 2694 Delete type=2 #383
-2025/06/02-12:53:41.921 2694 Delete type=2 #384
-2025/06/02-12:53:41.921 2694 Delete type=2 #385
-2025/06/02-12:53:41.921 2694 Delete type=2 #386
-2025/06/02-12:53:41.921 2694 Delete type=2 #387
-2025/06/02-12:53:41.921 2694 Delete type=2 #390
+2025/06/02-14:36:40.486 2dd8 Reusing MANIFEST D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/06/02-14:36:40.486 2dd8 Recovering log #522
+2025/06/02-14:36:40.554 2dd8 Reusing old log D:\Workplace\wa-Bulk\server\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000522.log 
+2025/06/02-14:36:42.490 424c Manual compaction at level-0 from '\x00?\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00@\x00\x00\x00' @ 0 : 0; will stop at (end)

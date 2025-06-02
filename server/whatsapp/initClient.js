@@ -17,6 +17,7 @@ module.exports = (io, isClientReadyRef) => {
     let chatbotRules = [];
     let keywordGroups = [];
     const userContext = new Map();
+    let isBotPaused = false;
 
     const loadChatbotRules = async () => {
         try {
@@ -87,6 +88,12 @@ module.exports = (io, isClientReadyRef) => {
 
     // Chatbot Logic
     client.on('message', async message => {
+
+        if (isBotPaused) {
+            console.log(`⏸️ Bot is paused. Ignoring message from ${message.from}`);
+            return;
+        }
+
         const incomingText = message.body.trim().toLowerCase();
         const from = message.from;
 
@@ -202,5 +209,18 @@ module.exports = (io, isClientReadyRef) => {
 
 
     client.initialize();
-    return client;
+    return {
+        client,
+        pauseBot: () => {
+            isBotPaused = true;
+            console.log('⏸️ Chatbot paused');
+        },
+        resumeBot: () => {
+            isBotPaused = false;
+            console.log('▶️ Chatbot resumed');
+        },
+        isBotPaused: () => isBotPaused
+    };
 };
+
+
