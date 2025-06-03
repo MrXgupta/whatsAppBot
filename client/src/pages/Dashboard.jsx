@@ -11,6 +11,7 @@ import CampaignStats from "../Components/Campaign/CampaignStats.jsx";
 import Overview from "../Components/Dashboard/Overview.jsx";
 import Pie from "../Components/Dashboard/Pie.jsx";
 import gsap from 'gsap';
+import SuccessRatePie from "../Components/Dashboard/SuccessRatePie.jsx";
 
 const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
@@ -109,34 +110,48 @@ const Dashboard = () => {
                 <div className="p-6">
                     <h1 className="text-3xl font-bold mb-6 dashboard-title">📊 WhatsApp Report Dashboard</h1>
 
-                    <div className="grid grid-cols-2 gap-6 items-center mb-6">
-                        <div className="grid grid-cols-3 gap-4 dashboard-stats">
-                            <div className="bg-white shadow rounded p-4 dashboard-stats-box">
-                                <h2 className="text-sm text-gray-600">Message by month</h2>
-                                <div className="text-xl font-bold">{totalSent + totalFailed}/50000</div>
-                                <div className="w-full bg-gray-200 h-2 mt-2 rounded">
-                                    <div className="bg-green-500 h-2 rounded"
-                                         style={{width: `${(totalSent + totalFailed) / 50000 * 100}%`}}></div>
+                    <div className="grid grid-cols-3 gap-6 items-start mb-6 dashboard-stats-box">
+                        {/* Left column (2/3) */}
+                        <div className="col-span-2 flex flex-col gap-6">
+                            {/* Stats Tiles */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-white shadow rounded-2xl p-4">
+                                    <h2 className="text-sm text-gray-600">Message by month</h2>
+                                    <div className="text-xl font-bold">{totalSent + totalFailed}/50000</div>
+                                    <div className="w-full bg-gray-200 h-2 mt-2 rounded">
+                                        <div
+                                            className="bg-green-500 h-2 rounded"
+                                            style={{ width: `${(totalSent + totalFailed) / 50000 * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white shadow rounded-2xl p-4">
+                                    <h2 className="text-sm text-gray-600">Total message sent</h2>
+                                    <div className="text-xl font-bold text-green-600">{totalSent} Messages</div>
+                                </div>
+                                <div className="bg-white shadow rounded-2xl p-4">
+                                    <h2 className="text-sm text-gray-600">Total failed</h2>
+                                    <div className="text-xl font-bold text-red-500">{totalFailed} Messages</div>
                                 </div>
                             </div>
-                            <div className="bg-white shadow rounded p-4 dashboard-stats-box">
-                                <h2 className="text-sm text-gray-600">Total message sent</h2>
-                                <div className="text-xl font-bold text-green-600">{totalSent} Messages</div>
-                            </div>
-                            <div className="bg-white shadow rounded p-4 dashboard-stats-box">
-                                <h2 className="text-sm text-gray-600">Total failed</h2>
-                                <div className="text-xl font-bold text-red-500">{totalFailed} Messages</div>
+
+                            {/* Bottom Pie chart (Left) */}
+                            <div className="bg-white shadow rounded-2xl p-4">
+                            <Pie progress={progress} />
                             </div>
                         </div>
 
-                        <div className="dashboard-pie-chart">
-                            <Pie progress={progress}/>
+                        {/* Right-side Large Pie chart */}
+                        <div className="bg-white shadow rounded-2xl p-4 h-full flex items-center justify-center">
+                                <SuccessRatePie totalSent={totalSent} totalFailed={totalFailed} loading={loading} />
                         </div>
                     </div>
 
+
+
                     <div className="dashboard-charts">
                         <Charts selectedRange={selectedRange} setSelectedRange={setSelectedRange}
-                                customRange={customRange} setCustomRange={setCustomRange} campaignStats={campaignStats}/>
+                                customRange={customRange} setCustomRange={setCustomRange}/>
                     </div>
 
                     <div className="dashboard-overview">

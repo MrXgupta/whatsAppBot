@@ -73,15 +73,25 @@ const ShowContacts = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {contacts.map((number, index) => (
-                        <tr key={index} className="border-t">
-                            <td className="p-3">{(page - 1) * 10 + index + 1}</td>
-                            <td className="p-3 font-mono">{number}</td>
-                            <td className={`p-3 font-semibold ${tab === 'invalid' ? 'text-red-500' : 'text-green-600'}`}>
-                                {tab === 'invalid' ? 'Invalid' : tab === 'valid' ? 'Valid' : (groupInfo.validNumbers?.includes(number) ? 'Valid' : 'Invalid')}
-                            </td>
-                        </tr>
-                    ))}
+                    {contacts.map((number, index) => {
+                        const isValid = tab === 'valid'
+                            ? true
+                            : tab === 'invalid'
+                                ? false
+                                : groupInfo.validNumbers?.some(validNum => String(validNum).trim() === String(number).trim());
+
+                        const colorClass = isValid ? 'text-green-600' : 'text-red-500';
+                        const label = isValid ? 'Valid' : 'Invalid';
+
+                        return (
+                            <tr key={index} className="border-t">
+                                <td className="p-3">{(page - 1) * 10 + index + 1}</td>
+                                <td className="p-3 font-mono">{number}</td>
+                                <td className={`p-3 font-semibold ${colorClass}`}>{label}</td>
+                            </tr>
+                        );
+                    })}
+
                     {contacts.length === 0 && (
                         <tr>
                             <td colSpan="3" className="p-4 text-center text-gray-500">No numbers found</td>

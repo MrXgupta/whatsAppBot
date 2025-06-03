@@ -8,13 +8,13 @@ const NavBar = () => {
     const { clientInfo } = useClientInfo();
 
     const navItems = [
-        { to: "/", label: "Dashboard", icon: LayoutDashboard },
+        { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { to: "/campaigns", label: "Campaigns", icon: Layers },
         { to: "/contacts", label: "Contacts", icon: Users },
         { to: "/profile", label: "Profile", icon: UserCircle },
         { to: "/chatbot", label: "Chat Bot", icon: Bot },
         { to: "/chatbot/logs", label: "ChatBot Replies", icon: MessageSquareQuote },
-        { to: "/inbox", label: "Inbox", icon: ScrollText },
+        // { to: "/inbox", label: "Inbox", icon: ScrollText },
     ];
 
     return (

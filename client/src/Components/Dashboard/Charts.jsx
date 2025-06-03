@@ -1,121 +1,96 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import React, {useMemo} from "react";
-import {isAfter, isBefore, parseISO, subDays, subMonths} from "date-fns";
+import {
+    LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
+} from 'recharts';
+import React, { useEffect, useState } from "react";
+import { subDays, subMonths, isAfter, isBefore, parseISO } from "date-fns";
+import axios from "axios";
 
-const Charts = ({selectedRange, setSelectedRange, customRange, setCustomRange , campaignStats}) => {
+const Charts = ({ selectedRange, setSelectedRange, customRange, setCustomRange }) => {
+    const [chartData, setChartData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
 
-    const groupedByDate = useMemo(() => {
+    const fetchCampaignChartStats = async () => {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-all-stats`);
+        return response.data;
+    };
+
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await fetchCampaignChartStats();
+            setChartData(data);
+        };
+        loadData();
+    }, []);
+
+    useEffect(() => {
         const now = new Date();
-        let filtered = [];
+        let result = [];
 
         if (selectedRange === '28days') {
-            const startDate = subDays(now, 28);
-            filtered = campaignStats.filter(c => parseISO(c.sentAt) >= startDate);
+            const start = subDays(now, 28);
+            result = chartData.filter(d => parseISO(d.date) >= start);
         } else if (selectedRange === '3months') {
-            const startDate = subMonths(now, 3);
-            filtered = campaignStats.filter(c => parseISO(c.sentAt) >= startDate);
+            const start = subMonths(now, 3);
+            result = chartData.filter(d => parseISO(d.date) >= start);
         } else if (selectedRange === 'custom' && customRange.start && customRange.end) {
             const start = new Date(customRange.start);
             const end = new Date(customRange.end);
-            filtered = campaignStats.filter(c => {
-                const date = parseISO(c.sentAt);
-                return date >= start && date <= end;
+            result = chartData.filter(d => {
+                const date = parseISO(d.date);
+                return isAfter(date, start) && isBefore(date, end);
             });
         } else {
-            filtered = campaignStats;
+            result = chartData;
         }
 
-        const map = {};
-        filtered.forEach(c => {
-            const date = c.sentAt?.split('T')[0];
-            if (!map[date]) map[date] = {sent: 0, failed: 0};
-            map[date].sent += c.sent;
-            map[date].failed += c.failed;
-        });
-
-        return Object.entries(map)
-            .map(([date, stats]) => ({date, ...stats}))
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-    }, [campaignStats, selectedRange, customRange]);
-
-    const filterByDateRange = (data, range) => {
-        const now = new Date();
-        let startDate;
-
-        if (range === '28days') {
-            startDate = subDays(now, 28);
-        } else if (range === '3months') {
-            startDate = subMonths(now, 3);
-        } else if (range?.start && range?.end) {
-            startDate = new Date(range.start);
-            const endDate = new Date(range.end);
-            return data.filter(c => {
-                const date = parseISO(c.sentAt);
-                return isAfter(date, startDate) && isBefore(date, endDate);
-            });
-        }
-
-        return data.filter(c => isAfter(parseISO(c.sentAt), startDate));
-    };
+        setFilteredData(result);
+    }, [chartData, selectedRange, customRange]);
 
     return (
-        <>
-            <div className="m-4 flex flex-col items-end">
-                <div className="flex items-center  gap-4 mb-4">
-                    <select
-                        className="border p-2 rounded"
-                        value={selectedRange}
-                        onChange={(e) => setSelectedRange(e.target.value)}
-                    >
-                        <option value="28days">Last 28 Days</option>
-                        <option value="3months">Last 3 Months</option>
-                        <option value="custom">Custom Range</option>
-                    </select>
+        <div className="m-4 flex flex-col items-end">
+            <div className="flex items-center gap-4 mb-4">
+                <select
+                    className="border p-2 rounded"
+                    value={selectedRange}
+                    onChange={(e) => setSelectedRange(e.target.value)}
+                >
+                    <option value="28days">Last 28 Days</option>
+                    <option value="3months">Last 3 Months</option>
+                    <option value="custom">Custom Range</option>
+                </select>
 
-                    {selectedRange === 'custom' && (
-                        <div className="flex gap-2">
-                            <input
-                                type="date"
-                                className="border p-2 rounded"
-                                value={customRange.start}
-                                onChange={(e) => setCustomRange(prev => ({ ...prev, start: e.target.value }))}
-                            />
-                            <input
-                                type="date"
-                                className="border p-2 rounded"
-                                value={customRange.end}
-                                onChange={(e) => setCustomRange(prev => ({ ...prev, end: e.target.value }))}
-                            />
-                        </div>
-                    )}
-                </div>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={groupedByDate}>
-                        <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tick={{ fontSize: 14, fontWeight: 600 }} />
-                        <YAxis tick={{ fontSize: 14, fontWeight: 600 }} />
-                        <Tooltip
-                            contentStyle={{ fontWeight: "bold", backgroundColor: "#f9fafb", border: "1px solid #ddd" }}
+                {selectedRange === 'custom' && (
+                    <div className="flex gap-2">
+                        <input
+                            type="date"
+                            className="border p-2 rounded"
+                            value={customRange.start}
+                            onChange={(e) => setCustomRange(prev => ({ ...prev, start: e.target.value }))}
                         />
-                        <Line
-                            type="monotone"
-                            dataKey="sent"
-                            stroke="#16a34a"
-                            strokeWidth={3}
-                            dot={{ r: 5 }}
+                        <input
+                            type="date"
+                            className="border p-2 rounded"
+                            value={customRange.end}
+                            onChange={(e) => setCustomRange(prev => ({ ...prev, end: e.target.value }))}
                         />
-                        <Line
-                            type="monotone"
-                            dataKey="failed"
-                            stroke="#dc2626"
-                            strokeWidth={3}
-                            dot={{ r: 5 }}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
+                    </div>
+                )}
             </div>
-        </>
-    )
-}
+
+            <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={filteredData}>
+                    <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 14, fontWeight: 600 }} />
+                    <YAxis tick={{ fontSize: 14, fontWeight: 600 }} />
+                    <Tooltip
+                        contentStyle={{ fontWeight: "bold", backgroundColor: "#f9fafb", border: "1px solid #ddd" }}
+                    />
+                    <Line type="monotone" dataKey="sent" stroke="#16a34a" strokeWidth={3} dot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="failed" stroke="#dc2626" strokeWidth={3} dot={{ r: 5 }} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
 
 export default Charts;

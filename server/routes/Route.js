@@ -3,7 +3,7 @@ const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
 const { CreateCampaign, deleteCampaign } = require('../controllers/CreateCampaign');
 const { AddContactGroup, getContacts, getContactsById, deleteGroupContact } = require('../controllers/AddContacts');
-const getCampaignStats = require('../controllers/getCampaignStats');
+const {getCampaignStats , getAllCampaignStats} = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatbotController');
@@ -26,6 +26,7 @@ module.exports = (io, clientInstance, isClientReadyRef) => {
     router.get('/contacts/:id', getContactsById);
     router.delete('/deleteCampaign/:id', deleteCampaign);
     router.get('/campaign-stats', getCampaignStats);
+    router.get('/campaign-all-stats', getAllCampaignStats);
     router.get('/campaign/:id', getCampaignById);
     router.post('/upload-csv', uploadCSV);
 

@@ -35,7 +35,7 @@ const CampaignDetail = () => {
             <div className="w-full mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 bg-white rounded-xl shadow-lg p-6">
                     <div className="flex gap-2 items-baseline">
-                    <button><Undo2/></button>
+                    <button onClick={()=>history.back()}><Undo2/></button>
                     <h1 className="text-3xl font-bold mb-4">Campaign Overview</h1>
                     </div>
 

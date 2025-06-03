@@ -24,7 +24,7 @@ const CampaignPreview = ({ message, mediaFile }) => {
                         </div>
                     </div>
                     <div className="flex-1 bg-[url('https://w0.peakpx.com/wallpaper/818/148/HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg')] bg-cover p-3 overflow-y-auto">
-                        <div className="bg-white rounded-lg shadow px-3 py-2 text-sm max-w-[80%] text-gray-800">
+                        <div className="bg-white rounded-lg shadow px-3 py-2 text-sm max-w-[80%] text-gray-800 overflow-hidden whitespace-pre-wrap break-words">
                             {mediaFile && (
                                 <img
                                     src={URL.createObjectURL(mediaFile)}
