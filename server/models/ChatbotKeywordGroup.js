@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
-
+// Chatbot Keyword Group Schema
+const mongoose = require("mongoose");
 const chatbotKeywordGroupSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     groupName: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
     },
     keywords: {
@@ -22,4 +22,5 @@ const chatbotKeywordGroupSchema = new mongoose.Schema({
     }
 });
 
+chatbotKeywordGroupSchema.index({ userId: 1 });
 module.exports = mongoose.model('ChatbotKeywordGroup', chatbotKeywordGroupSchema);

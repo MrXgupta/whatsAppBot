@@ -16,6 +16,8 @@ import SuccessRatePie from "../Components/Dashboard/SuccessRatePie.jsx";
 const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const Dashboard = () => {
+    const user = useSelector(state => state.user);
+    console.log(user);
     const dispatch = useDispatch();
     const {logs} = useSelector(state => state.app);
     const [campaignStats, setCampaignStats] = useState([]);
@@ -76,7 +78,9 @@ const Dashboard = () => {
         const fetchStats = async () => {
             setLoading(false);
             try {
-                const {data} = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-stats`);
+                const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/campaign-stats`, {
+                    userId: user._id,
+                });
                 setCampaignStats(data.campaigns || []);
                 setTotalSent(data.totalSent || 0);
                 setTotalFailed(data.totalFailed || 0);
@@ -91,7 +95,9 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchBotStats = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/chatbotStats`);
+                const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbotStats`, {
+                    userId: user._id,
+                });
                 if (res.data.success) {
                     setBotStats(res.data.stats);
                 }

@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-
+// Chatbot Conversation Schema
+const mongoose = require("mongoose");
 const ChatEntrySchema = new mongoose.Schema({
     query: String,
     response: String,
@@ -7,8 +7,10 @@ const ChatEntrySchema = new mongoose.Schema({
 });
 
 const ChatbotConversationSchema = new mongoose.Schema({
-    number: { type: String, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    number: { type: String },
     chats: [ChatEntrySchema]
 });
 
+ChatbotConversationSchema.index({ userId: 1 });
 module.exports = mongoose.model('ChatbotConversation', ChatbotConversationSchema);

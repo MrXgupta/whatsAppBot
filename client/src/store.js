@@ -1,11 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import appReducer from './slices/appSlice';
+import userReducer from './slices/userSlice';
 
 const loadState = () => {
     try {
-        const serializedState = localStorage.getItem('app');
-        if (serializedState === null) return undefined;
-        return { app: JSON.parse(serializedState) };
+        const app = JSON.parse(localStorage.getItem('app'));
+        const user = JSON.parse(localStorage.getItem('user'));
+        return {
+            app: app || undefined,
+            user: user || undefined,
+        };
     } catch (e) {
         console.error('Could not load state', e);
         return undefined;
@@ -14,8 +18,8 @@ const loadState = () => {
 
 const saveState = (state) => {
     try {
-        const serializedState = JSON.stringify(state.app);
-        localStorage.setItem('app', serializedState);
+        localStorage.setItem('app', JSON.stringify(state.app));
+        localStorage.setItem('user', JSON.stringify(state.user));
     } catch (e) {
         console.error('Could not save state', e);
     }
@@ -26,6 +30,7 @@ const preloadedState = loadState();
 export const store = configureStore({
     reducer: {
         app: appReducer,
+        user: userReducer
     },
     preloadedState,
 });

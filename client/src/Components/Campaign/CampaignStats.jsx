@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import swal from "sweetalert2";
+import {useSelector} from "react-redux";
 
 const CampaignStats = () => {
     const [campaignStats, setCampaignStats] = useState([]);
@@ -13,6 +14,7 @@ const CampaignStats = () => {
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
     const limit = 10;
+    const user = useSelector(state => state.user);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -26,7 +28,9 @@ const CampaignStats = () => {
                     ...(toDate && { toDate }),
                 });
 
-                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-stats?${params.toString()}`);
+                const { data } = await axios.post(`${import.meta.env.VITE_BASE_URL}/campaign-stats?${params.toString()}` , {
+                    userId: user._id,
+                });
                 setCampaignStats(data.campaigns || []);
                 setTotalPages(data.totalPages);
             } catch (err) {
@@ -34,12 +38,16 @@ const CampaignStats = () => {
             }
         };
         fetchStats();
-    }, [page, refetch, sortBy, order, fromDate, toDate]);
+    }, [page, refetch, sortBy, order, fromDate, toDate , user._id]);
 
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/deleteCampaign/${id}`);
+            const user = JSON.parse(localStorage.getItem('user'));
+            const userId = user?._id;
+
+            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/deleteCampaign/${id}/${userId}`);
+
             if (res.status === 200) {
                 swal.fire({
                     icon: "success",

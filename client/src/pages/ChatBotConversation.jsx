@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import {useSelector} from "react-redux";
 
 const ChatbotLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const user = useSelector(state => state.user);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -19,7 +21,9 @@ const ChatbotLogs = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot-conversations`);
+                const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot-conversations` , {
+                    userId: user._id,
+                });
                 if (res.data.success) {
                     setLogs(res.data.conversation);
                     console.log(res.data);

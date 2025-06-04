@@ -19,6 +19,7 @@ const Contacts = () => {
     const [previewNumbers, setPreviewNumbers] = useState([]);
     const [filePath, setFilePath] = useState('');
     const [fetch, setFetch] = useState(false)
+    const user = useSelector(state => state.user);
     const handleSaveContacts = async () => {
         if (!groupName.trim()) {
             return Swal.fire({icon: 'error', title: 'Missing Group Name', text: 'Please provide a group name.'});
@@ -34,6 +35,7 @@ const Contacts = () => {
             const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/contacts`, {
                 groupName,
                 filePath,
+                userId: user._id,
             });
 
             setFetch(!fetch)
@@ -60,7 +62,9 @@ const Contacts = () => {
     const fetchGroups = async () => {
         setLoading(false);
         try {
-            const {data} = await axios.get(`${import.meta.env.VITE_BASE_URL}/getContacts`);
+            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContacts` , {
+                userId: user._id,
+            });
             setGroups(data.groups || []);
             setLoading(true)
         } catch (err) {
@@ -74,7 +78,7 @@ const Contacts = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/contacts/${id}`);
+            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/contacts/${id}/${user._id}`);
             Swal.fire({icon: 'success', title: 'Group Deleted', text: 'Group deleted successfully.'});
             setFetch(!fetch)
         } catch (err) {

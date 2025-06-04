@@ -4,13 +4,17 @@ import {
 import React, { useEffect, useState } from "react";
 import { subDays, subMonths, isAfter, isBefore, parseISO } from "date-fns";
 import axios from "axios";
+import {useSelector} from "react-redux";
 
 const Charts = ({ selectedRange, setSelectedRange, customRange, setCustomRange }) => {
     const [chartData, setChartData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
+    const user = useSelector(state => state.user);
 
     const fetchCampaignChartStats = async () => {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/campaign-all-stats`);
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/campaign-all-stats`, {
+            userId: user._id,
+        });
         return response.data;
     };
 

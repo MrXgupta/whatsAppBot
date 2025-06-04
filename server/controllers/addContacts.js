@@ -9,15 +9,15 @@ const validateNumber = (number) => {
 
 const AddContactGroup = async (req, res) => {
     try {
-        const { groupName, filePath } = req.body;
+        const { userId, groupName, filePath } = req.body;
 
-        if (!groupName || !filePath) {
-            return res.status(400).json({ error: 'Group name and file path are required.' });
+        if (!userId || !groupName || !filePath) {
+            return res.status(400).json({ error: 'User ID, group name, and file path are required.' });
         }
 
-        const existing = await Contacts.findOne({ groupName });
+        const existing = await Contacts.findOne({ userId, groupName });
         if (existing) {
-            return res.status(400).json({ error: 'Group name already exists.' });
+            return res.status(400).json({ error: 'Group name already exists for this user.' });
         }
 
         const numbers = [];
@@ -30,7 +30,6 @@ const AddContactGroup = async (req, res) => {
                 let raw = row.number?.toString().trim();
                 if (!raw || raw.toLowerCase() === 'number') return;
 
-
                 const cleanedNum = Number(raw).toString().replace(/\.0+$/, '');
                 if (cleanedNum.length >= 10) {
                     numbers.push(cleanedNum);
@@ -42,6 +41,7 @@ const AddContactGroup = async (req, res) => {
                 }
 
                 const group = await Contacts.create({
+                    userId,
                     groupName,
                     numbers,
                     validNumbers: [],
@@ -98,7 +98,10 @@ const AddContactGroup = async (req, res) => {
 
 const getContacts = async (req, res) => {
     try {
-        const groups = await Contacts.find().sort({ addedAt: -1 });
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required' });
+
+        const groups = await Contacts.find({ userId }).sort({ addedAt: -1 });
         res.status(200).json({ success: true, groups });
     } catch (error) {
         console.error('Error fetching contacts:', error);
@@ -111,9 +114,9 @@ const getContactsById = async (req, res) => {
     const { type = 'all', page = 1, limit = 10 } = req.query;
 
     try {
-        const group = await Contacts.findById(id);
+        const group = await Contacts.findOne({ _id: id });
         if (!group) {
-            return res.status(404).json({ error: 'Group not found' });
+            return res.status(404).json({ error: 'Group not found for this user' });
         }
 
         let numbersToSend = [];
@@ -154,11 +157,12 @@ const getContactsById = async (req, res) => {
 const deleteGroupContact = async (req, res) => {
     try {
         const { id } = req.params;
+        const { userId } = req.body;
 
-        const deleted = await Contacts.findByIdAndDelete(id);
+        const deleted = await Contacts.findOneAndDelete({ _id: id, userId });
 
         if (!deleted) {
-            return res.status(404).json({ success: false, message: "Group contact not found" });
+            return res.status(404).json({ success: false, message: "Group contact not found or unauthorized" });
         }
 
         res.status(200).json({ success: true, message: "Group contact deleted successfully" });
@@ -168,4 +172,4 @@ const deleteGroupContact = async (req, res) => {
     }
 };
 
-module.exports = { AddContactGroup, getContacts, getContactsById , deleteGroupContact };
+module.exports = { AddContactGroup, getContacts, getContactsById, deleteGroupContact };

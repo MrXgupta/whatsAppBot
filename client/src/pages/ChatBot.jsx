@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import gsap from 'gsap';
+import {useSelector} from "react-redux";
 
 const Chatbot = () => {
     const [rules, setRules] = useState([]);
@@ -10,14 +11,20 @@ const Chatbot = () => {
     const [keywordGroups, setKeywordGroups] = useState([]);
     const [groupName, setGroupName] = useState('');
     const [groupKeywords, setGroupKeywords] = useState('');
-
+    const user = useSelector(state => state.user);
     const [isBotActive, setIsBotActive] = useState(true);
 
     const fetchData = async () => {
         const [rulesRes, keywordsRes, statusRes] = await Promise.all([
-            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`),
-            axios.get(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`),
-            axios.get(`${import.meta.env.VITE_BASE_URL}/bot/status`)
+            axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`, {
+                userId: user._id,
+            }),
+            axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`, {
+                userId: user._id,
+            }),
+            axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, {
+                userId: user._id,
+            })
         ]);
         setRules(rulesRes.data.rules || []);
         setKeywordGroups(keywordsRes.data.groups || []);
@@ -27,7 +34,7 @@ const Chatbot = () => {
 
     const toggleBotStatus = async () => {
         const newStatus = !isBotActive;
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, { isActive: newStatus });
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, { isActive: newStatus , userId: user._id });
         setIsBotActive(newStatus);
     };
 
@@ -38,10 +45,11 @@ const Chatbot = () => {
 
     const handleSaveRule = async () => {
         if (!ruleKeyword || !response) return alert('Please fill all fields.');
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`, {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/save-rules`, {
             keyword: ruleKeyword,
             response,
-            matchType
+            matchType,
+            userId: user._id,
         });
         setRuleKeyword('');
         setResponse('');
@@ -51,9 +59,10 @@ const Chatbot = () => {
 
     const handleSaveKeywordGroup = async () => {
         if (!groupName || !groupKeywords) return alert('Please fill all fields.');
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`, {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/save-keywords`, {
             groupName,
-            keywords: groupKeywords.split(',').map(k => k.trim())
+            keywords: groupKeywords.split(',').map(k => k.trim()),
+            userId: user._id,
         });
         setGroupName('');
         setGroupKeywords('');

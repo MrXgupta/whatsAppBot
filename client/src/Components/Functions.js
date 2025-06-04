@@ -3,6 +3,7 @@ import {
 } from '../slices/appSlice';
 import Swal from 'sweetalert2';
 import axios from "axios";
+import {useSelector} from "react-redux";
 
 export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
     const file = e.target.files[0];
@@ -62,52 +63,57 @@ export const handleSend = async ({
                                      minDelay,
                                      maxDelay,
                                      mediaFile,
-                                     setSending
-
+                                     setSending,
+                                     user,
                                  }) => {
+
+    console.log(user)
     if (!campaignName.trim() || !selectedContactGroup || !message.trim()) {
-        return Swal.fire({icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.'});
+        return Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.' });
+    }
+
+    const formData = new FormData();
+
+    formData.append('campaignName', campaignName);
+    formData.append('groupId', selectedContactGroup);
+    formData.append('message', message);
+    formData.append('minDelay', minDelay);
+    formData.append('maxDelay', maxDelay);
+    formData.append('userId', user._id);
+
+    if (mediaFile) {
+        formData.append('media', mediaFile);
+        console.log('📤 Appended media file:', mediaFile);
     }
 
     setSending(true);
 
     try {
-        const formData = new FormData();
-        formData.append('campaignName', campaignName);
-        formData.append('groupId', selectedContactGroup);
-        formData.append('message', message);
-        formData.append('minDelay', minDelay);
-        formData.append('maxDelay', maxDelay);
+        const { data } = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/send`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
 
-        if (mediaFile) {
-            formData.append('media', mediaFile);
-            console.log('📤 Appended media file:', mediaFile);
-        }
+        const { total } = data;
+        const avgDelay = (parseInt(minDelay) + parseInt(maxDelay)) / 2;
+        const estimatedSeconds = Math.ceil(total * avgDelay);
+        const minutes = Math.floor(estimatedSeconds / 60);
+        const seconds = estimatedSeconds % 60;
 
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/send`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }).then(({ data }) => {
-            const { total } = data;
-
-            const avgDelay = (parseInt(minDelay) + parseInt(maxDelay)) / 2;
-            const estimatedSeconds = Math.ceil(total * avgDelay);
-            const minutes = Math.floor(estimatedSeconds / 60);
-            const seconds = estimatedSeconds % 60;
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Campaign Started',
-                html: `
-            Campaign messages are being sent in background.<br/>
-            <b>Estimated completion time:</b> ${minutes}m ${seconds}s for ${total} messages.
-        `,
-            });
+        Swal.fire({
+            icon: 'success',
+            title: 'Campaign Started',
+            html: `
+                Campaign messages are being sent in background.<br/>
+                <b>Estimated completion time:</b> ${minutes}m ${seconds}s for ${total} messages.
+            `,
         });
-
     } catch (err) {
         console.error(err);
-        Swal.fire({icon: 'error', title: 'Error', text: 'Failed to send campaign messages.'});
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send campaign messages.' });
     } finally {
         setSending(false);
     }
 };
+

@@ -3,14 +3,19 @@ import axios from "axios";
 import io from "socket.io-client";
 import Loader from "../Loader.jsx";
 import useClientInfo from "./userClientInfo.js"
+import {useSelector} from "react-redux";
+import Swal from "sweetalert2";
 
 
 const LinkedAccount = () => {
     const {clientInfo, setClientInfo} = useClientInfo();
     const isLoggedOut = useRef(false);
+    const user = useSelector(state => state.user);
     const handleLogout = async () => {
         try {
-            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/logout`);
+            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/logout`, {
+                userId: user._id,
+            });
             if (data.success) {
                 isLoggedOut.current = true;
                 setClientInfo(null);

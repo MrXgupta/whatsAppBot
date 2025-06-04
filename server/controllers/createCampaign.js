@@ -2,8 +2,11 @@ const Campaign = require('../models/Campaign');
 
 const CreateCampaign = async (req, res) => {
     try {
-        const { name, description, createdBy } = req.body;
-        const campaign = await Campaign.create({ name, description, createdBy });
+        const { name, description } = req.body;
+        const userId = req.user.id; // from auth middleware
+
+        const campaign = await Campaign.create({ name, description, createdBy: userId });
+
         res.status(201).json({ success: true, campaign });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -12,12 +15,12 @@ const CreateCampaign = async (req, res) => {
 
 const deleteCampaign = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id, userId } = req.params;
 
-        const deleted = await Campaign.findByIdAndDelete(id);
+        const deleted = await Campaign.findOneAndDelete({ _id: id, createdBy: userId });
 
         if (!deleted) {
-            return res.status(404).json({ success: false, message: "Campaign not found" });
+            return res.status(404).json({ success: false, message: "Campaign not found or unauthorized" });
         }
 
         res.status(200).json({ success: true, message: "Campaign deleted successfully" });
@@ -27,4 +30,5 @@ const deleteCampaign = async (req, res) => {
     }
 };
 
-module.exports = {CreateCampaign , deleteCampaign};
+
+module.exports = { CreateCampaign, deleteCampaign };

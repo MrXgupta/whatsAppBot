@@ -1,7 +1,8 @@
-const mongoose = require('mongoose');
-
+// Contact Group Schema
+const mongoose = require("mongoose");
 const ContactGroupSchema = new mongoose.Schema({
-    groupName: { type: String, required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    groupName: { type: String, required: true },
     numbers: [{ type: String }],
     validNumbers: [{ type: String }],
     invalidNumbers: [{ type: String }],
@@ -10,5 +11,5 @@ const ContactGroupSchema = new mongoose.Schema({
     addedAt: { type: Date, default: Date.now }
 });
 
-
+ContactGroupSchema.index({ userId: 1 });
 module.exports = mongoose.model('ContactGroup', ContactGroupSchema);

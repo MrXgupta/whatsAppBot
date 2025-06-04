@@ -4,14 +4,14 @@ const ChatbotConversation = require('../models/ChatbotConversation');
 
 exports.saveChatbotRule = async (req, res) => {
     try {
-        const { keyword, matchType = 'exact', response, parent, group } = req.body;
-        if (!keyword || !response) return res.status(400).json({ error: 'Keyword and response are required.' });
+        const { userId, keyword, matchType = 'exact', response, parent, group } = req.body;
+        if (!userId || !keyword || !response) return res.status(400).json({ error: 'User ID, keyword, and response are required.' });
 
-        const rule = new ChatbotRule({ keyword, matchType, response, parent, group });
+        const rule = new ChatbotRule({ userId, keyword, matchType, response, parent, group });
         await rule.save();
 
         if (parent) {
-            const parentRule = await ChatbotRule.findById(parent);
+            const parentRule = await ChatbotRule.findOne({ _id: parent, userId });
             if (parentRule) {
                 parentRule.children.push(rule._id);
                 await parentRule.save();
@@ -27,7 +27,14 @@ exports.saveChatbotRule = async (req, res) => {
 
 exports.getAllChatbotRules = async (req, res) => {
     try {
-        const rules = await ChatbotRule.find().populate('children').populate('parent').populate('group');
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
+
+        const rules = await ChatbotRule.find({ userId })
+            .populate('children')
+            .populate('parent')
+            .populate('group');
+
         res.status(200).json({ success: true, rules });
     } catch (err) {
         console.error('❌ Error fetching rules:', err);
@@ -37,10 +44,10 @@ exports.getAllChatbotRules = async (req, res) => {
 
 exports.saveKeywordGroup = async (req, res) => {
     try {
-        const { groupName, keywords } = req.body;
-        if (!groupName || !Array.isArray(keywords)) return res.status(400).json({ error: 'Group name and keywords are required.' });
+        const { userId, groupName, keywords } = req.body;
+        if (!userId || !groupName || !Array.isArray(keywords)) return res.status(400).json({ error: 'User ID, group name, and keywords are required.' });
 
-        const group = new ChatbotKeywordGroup({ groupName, keywords });
+        const group = new ChatbotKeywordGroup({ userId, groupName, keywords });
         await group.save();
 
         res.status(201).json({ success: true, message: 'Keyword group created', group });
@@ -52,7 +59,10 @@ exports.saveKeywordGroup = async (req, res) => {
 
 exports.getAllKeywordGroups = async (req, res) => {
     try {
-        const groups = await ChatbotKeywordGroup.find();
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
+
+        const groups = await ChatbotKeywordGroup.find({ userId });
         res.status(200).json({ success: true, groups });
     } catch (err) {
         console.error('❌ Error fetching keyword groups:', err);
@@ -62,7 +72,10 @@ exports.getAllKeywordGroups = async (req, res) => {
 
 exports.getConversation = async (req, res) => {
     try {
-        const conversations = await ChatbotConversation.find({});
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
+
+        const conversations = await ChatbotConversation.find({ userId });
 
         const sorted = conversations.map(convo => {
             const sortedChats = [...convo.chats].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -87,7 +100,10 @@ exports.getConversation = async (req, res) => {
 
 exports.getBotReplyStats = async (req, res) => {
     try {
-        const conversations = await ChatbotConversation.find();
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
+
+        const conversations = await ChatbotConversation.find({ userId });
 
         let totalReplies = 0;
         let successCount = 0;

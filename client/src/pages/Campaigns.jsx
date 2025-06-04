@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import { handleSend } from "../Components/Functions.js";
 import axios from "axios";
 import Loader from "../Components/Loader";
@@ -19,13 +19,17 @@ const Campaigns = () => {
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(false);
     const [mediaFile, setMediaFile] = useState(null);
+    const user = useSelector(state => state.user) || localStorage.getItem('user');
+    console.log(user)
 
 
     useEffect(() => {
         const fetchGroups = async () => {
             setLoading(false);
             try {
-                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/getContacts`);
+                const { data } = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContacts` , {
+                    userId: user._id,
+                });
                 setGroups(data.groups || []);
                 setLoading(true);
             } catch (err) {
@@ -68,6 +72,7 @@ const Campaigns = () => {
                         sending={sending}
                         setSending={setSending}
                         handleSend={handleSend}
+                        user={user}
                     />
                     <CampaignPreview mediaFile={mediaFile} message={message} />
                 </div>

@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 
+// GET CAMPAIGN STATS (PAGINATED + SUMMARY)
 const getCampaignStats = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -12,7 +14,10 @@ const getCampaignStats = async (req, res) => {
         const fromDate = req.query.fromDate ? new Date(req.query.fromDate) : null;
         const toDate = req.query.toDate ? new Date(req.query.toDate) : null;
 
-        const matchStage = {};
+        const userId = new mongoose.Types.ObjectId(req.body.userId);
+        console.log("getCampaignStats userId:", userId);
+
+        const matchStage = { userId };
 
         if (fromDate || toDate) {
             matchStage.sentAt = {};
@@ -93,19 +98,20 @@ const getCampaignStats = async (req, res) => {
     }
 };
 
-
-
+// GET ALL CAMPAIGN STATS (FOR CHARTING/OVERVIEW)
 const getAllCampaignStats = async (req, res) => {
     try {
+        const userId = new mongoose.Types.ObjectId(req.body.userId);
+        console.log("getAllCampaignStats userId:", userId);
+
         const stats = await Campaign.aggregate([
             {
                 $match: {
+                    userId,
                     sentAt: { $ne: null }
                 }
             },
-            {
-                $unwind: "$logs"
-            },
+            { $unwind: "$logs" },
             {
                 $group: {
                     _id: {
@@ -138,16 +144,14 @@ const getAllCampaignStats = async (req, res) => {
                     failed: 1
                 }
             },
-            {
-                $sort: { date: 1 }
-            }
+            { $sort: { date: 1 } }
         ]);
 
         res.status(200).json(stats);
     } catch (err) {
-        console.error("Error generating campaign stats:", err);
+        console.error("❌ Error generating campaign stats:", err);
         res.status(500).json({ message: "Server error", error: err });
     }
 };
 
-module.exports = {getCampaignStats, getAllCampaignStats};
+module.exports = { getCampaignStats, getAllCampaignStats };

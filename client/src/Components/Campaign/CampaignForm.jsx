@@ -19,6 +19,7 @@ const CampaignForm = ({
                           sending,
                           setSending,
                           setMessageValue,
+    user,
                       }) => {
 
     return (
@@ -112,7 +113,8 @@ const CampaignForm = ({
                             minDelay,
                             maxDelay,
                             mediaFile,
-                            setSending
+                            setSending,
+                            user,
                         })
                     }
                     disabled={sending}

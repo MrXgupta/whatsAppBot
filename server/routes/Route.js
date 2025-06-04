@@ -7,84 +7,52 @@ const {getCampaignStats , getAllCampaignStats} = require('../controllers/getCamp
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatbotController');
+const authController = require('../controllers/authController')
+const botController = require('../controllers/botController');
+const ClientInfo = require('../controllers/ClientInfo');
 
-module.exports = (io, clientInstance, isClientReadyRef) => {
+module.exports = (io) => {
     const router = express.Router();
 
-    // Extract bot control functions from the clientInstance
-    const { client, pauseBot, resumeBot, isBotPaused } = clientInstance;
+    //auth router
+    router.post("/signup", authController.signup);
+    router.post("/login", authController.login);
+
 
     // Bulk Messaging Routes
-    router.post('/send', ...sendBulkMsg(client, io, isClientReadyRef));
+    router.post('/send', ...sendBulkMsg(io));
     router.post('/upload', handleCsv);
 
     // Campaign & Contact Routes
     router.post('/campaign', CreateCampaign);
-    router.post('/contacts', AddContactGroup);
-    router.delete('/contacts/:id', deleteGroupContact);
-    router.get('/getcontacts', getContacts);
-    router.get('/contacts/:id', getContactsById);
-    router.delete('/deleteCampaign/:id', deleteCampaign);
-    router.get('/campaign-stats', getCampaignStats);
-    router.get('/campaign-all-stats', getAllCampaignStats);
+    router.post('/campaign-stats', getCampaignStats);
+    router.post('/campaign-all-stats', getAllCampaignStats);
     router.get('/campaign/:id', getCampaignById);
+    router.delete('/deleteCampaign/:id/:userId', deleteCampaign);
+
+    router.post('/contacts', AddContactGroup);
+    router.post('/getContacts', getContacts);
+    router.delete('/contacts/:id', deleteGroupContact);
+    router.get('/contacts/:id', getContactsById);
+
     router.post('/upload-csv', uploadCSV);
 
     // Chatbot Routes
-    router.post('/chatbot/rules', controller.saveChatbotRule);
-    router.get('/chatbot/rules', controller.getAllChatbotRules);
-    router.post('/chatbot/keywords', controller.saveKeywordGroup);
-    router.get('/chatbot/keywords', controller.getAllKeywordGroups);
-    router.get('/chatbot-conversations', controller.getConversation);
-    router.get('/chatbotStats', controller.getBotReplyStats);
+    router.post('/chatbot/save-rules', controller.saveChatbotRule);
+    router.post('/chatbot/rules', controller.getAllChatbotRules);
+    router.post('/chatbot/save-keywords', controller.saveKeywordGroup);
+    router.post('/chatbot/keywords', controller.getAllKeywordGroups);
+    router.post('/chatbot-conversations', controller.getConversation);
+    router.post('/chatbotStats', controller.getBotReplyStats);
 
-    // Bot Control Routes
-    router.post('/bot/status', (req, res) => {
-        const { isActive } = req.body;
-
-        if (isActive) {
-            resumeBot();
-            return res.json({ isActive: true, status: 'resumed' });
-        } else {
-            pauseBot();
-            return res.json({ isActive: false, status: 'paused' });
-        }
-    });
-
-    router.get('/bot/status', (req, res) => {
-        res.json({ isActive: !isBotPaused() });
-    });
+    // Bot
+    router.post('/bot/status', botController.setBotStatus);
+    router.get('/bot/status', botController.getBotStatus);
 
     // WhatsApp Client Info & Logout
-    router.get('/client-info', async (req, res) => {
-        try {
-            if (!isClientReadyRef?.value) {
-                return res.status(404).json({ error: 'Not connected' });
-            }
+    router.post('/client-info', ClientInfo)
 
-            const info = client.info;
-            if (!info || !info.wid) {
-                return res.status(404).json({ error: 'Client info not available' });
-            }
 
-            let profilePicUrl = '';
-            try {
-                profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
-            } catch {
-                profilePicUrl = '';
-            }
-
-            res.json({
-                name: info.pushname || 'Unknown',
-                number: info.wid.user,
-                platform: info.platform,
-                profilePicUrl,
-            });
-        } catch (err) {
-            console.error('⚠️ Error fetching client info:', err.message);
-            res.status(500).json({ error: 'Failed to fetch client info' });
-        }
-    });
 
     router.post('/logout', async (req, res) => {
         try {

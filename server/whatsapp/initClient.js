@@ -3,224 +3,96 @@ const ChatbotRule = require('../models/ChatBotRule');
 const KeywordGroup = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
 
-module.exports = (io, isClientReadyRef) => {
+const createClient = (userId, io) => {
+    const clientId = userId.toString().replace(/[^a-zA-Z0-9_-]/g, '');
+    console.log(`🟢 Creating client for ${clientId}`);
+
     const client = new Client({
-        authStrategy: new LocalAuth(),
+        authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth', clientId }),
         puppeteer: {
             headless: true,
-            devtools: true,
-            executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         },
     });
 
+    let isBotPaused = false;
+    let userContext = new Map();
     let chatbotRules = [];
     let keywordGroups = [];
-    const userContext = new Map();
-    let isBotPaused = false;
 
     const loadChatbotRules = async () => {
-        try {
-            chatbotRules = await ChatbotRule.find({ isActive: true }).lean();
-            console.log(`🤖 Loaded ${chatbotRules.length} chatbot rules`);
-        } catch (err) {
-            console.error('❌ Error loading chatbot rules:', err);
-        }
+        chatbotRules = await ChatbotRule.find({ isActive: true }).lean();
     };
 
     const loadKeywordGroups = async () => {
-        try {
-            keywordGroups = await KeywordGroup.find({}).lean();
-            console.log(`🔑 Loaded ${keywordGroups.length} keyword groups`);
-        } catch (err) {
-            console.error('❌ Error loading keyword groups:', err);
-        }
+        keywordGroups = await KeywordGroup.find({}).lean();
     };
 
-    client.on('qr', qr => {
-        isClientReadyRef.value = false;
-        io.emit('qr', qr);
-    });
-
+    client.on('qr', (qr) => io.to(userId.toString()).emit('qr', qr));
     client.on('ready', async () => {
-        isClientReadyRef.value = true;
-        io.emit('ready');
-        console.log('✅ WhatsApp client is ready!');
-
-        try {
-            const info = client.info;
-            if (!info?.wid?._serialized) return;
-
-            let profilePicUrl = '';
-            try {
-                profilePicUrl = await client.getProfilePicUrl(info.wid._serialized);
-            } catch {
-                console.warn("Could not fetch profile picture.");
-            }
-
-            io.emit('client_info', {
-                name: info.pushname || 'Unknown',
-                number: info.wid.user,
-                platform: info.platform,
-                profilePicUrl,
-            });
-
-            await loadChatbotRules();
-            await loadKeywordGroups();
-
-        } catch (err) {
-            console.error('❌ Failed to fetch client info:', err);
-        }
+        io.to(userId.toString()).emit('ready');
+        await loadChatbotRules();
+        await loadKeywordGroups();
     });
 
-    client.on('auth_failure', msg => {
-        isClientReadyRef.value = false;
-        io.emit('auth_failure', msg);
-        console.error('❌ Auth failure:', msg);
-    });
+    client.on('auth_failure', (msg) => io.to(userId.toString()).emit('auth_failure', msg));
+    client.on('disconnected', (reason) => io.to(userId.toString()).emit('disconnected', reason));
 
-    client.on('disconnected', reason => {
-        isClientReadyRef.value = false;
-        io.emit('disconnected', reason);
-        console.log('⚠️ Disconnected:', reason);
-    });
-
-
-    // Chatbot Logic
-    client.on('message', async message => {
-
-        if (isBotPaused) {
-            console.log(`⏸️ Bot is paused. Ignoring message from ${message.from}`);
-            return;
-        }
-
-        const incomingText = message.body.trim().toLowerCase();
+    client.on('message', async (message) => {
+        if (isBotPaused) return;
         const from = message.from;
-
-        if (from.includes('@newsletter') || from.includes('@broadcast')) {
-            console.log(`Ignored system/broadcast message from ${from}`);
-            return;
-        }
-
-        const chatbotRules = await ChatbotRule.find({ isActive: true });
-        const keywordGroups = await KeywordGroup.find();
+        const incomingText = message.body.trim().toLowerCase();
 
         const resolveKeyword = (ruleKeyword) => {
-            if (!ruleKeyword || typeof ruleKeyword !== 'string') return [];
-
-            const group = keywordGroups.find(
-                k => k.groupName?.toLowerCase() === ruleKeyword.toLowerCase()
-            );
-
-            if (group) {
-                return group.keywords.map(k => k.toLowerCase());
-            }
-
-            return [ruleKeyword.toLowerCase()];
+            const group = keywordGroups.find(k => k.groupName?.toLowerCase() === ruleKeyword?.toLowerCase());
+            return group ? group.keywords.map(k => k.toLowerCase()) : [ruleKeyword.toLowerCase()];
         };
 
-        let matchedRule = null;
         const lastRuleId = userContext.get(from);
+        let matchedRule = null;
 
         if (lastRuleId) {
             const childRules = chatbotRules.filter(r => r.parentRuleId?.toString() === lastRuleId.toString());
-
             for (const rule of childRules) {
-                const ruleKeywords = resolveKeyword(rule.keyword);
-
-                const matches = ruleKeywords.some(keyword => {
-                    return (
-                        (rule.matchType === 'exact' && incomingText === keyword) ||
-                        (rule.matchType === 'contains' && incomingText.includes(keyword)) ||
-                        (rule.matchType === 'startsWith' && incomingText.startsWith(keyword)) ||
-                        (rule.matchType === 'endsWith' && incomingText.endsWith(keyword))
-                    );
-                });
-
-                if (matches) {
+                const keywords = resolveKeyword(rule.keyword);
+                if (keywords.some(k => incomingText.includes(k))) {
                     matchedRule = rule;
                     break;
                 }
             }
-
-            if (matchedRule) {
-                try {
-                    await message.reply(matchedRule.response);
-                } catch (err) {
-                    console.warn('Failed to reply to child rule:', err.message);
-                }
-                userContext.set(from, matchedRule._id);
-                console.log(`🔁 Follow-up reply to '${from}' with: ${matchedRule.response}`);
-                return;
-            }
         }
 
-        const rootRules = chatbotRules.filter(r => !r.parentRuleId);
-
-        for (const rule of rootRules) {
-            const ruleKeywords = resolveKeyword(rule.keyword);
-
-            const matches = ruleKeywords.some(keyword => {
-                return (
-                    (rule.matchType === 'exact' && incomingText === keyword) ||
-                    (rule.matchType === 'contains' && incomingText.includes(keyword)) ||
-                    (rule.matchType === 'startsWith' && incomingText.startsWith(keyword)) ||
-                    (rule.matchType === 'endsWith' && incomingText.endsWith(keyword))
-                );
-            });
-
-            if (matches) {
-                matchedRule = rule;
-                break;
+        if (!matchedRule) {
+            const rootRules = chatbotRules.filter(r => !r.parentRuleId);
+            for (const rule of rootRules) {
+                const keywords = resolveKeyword(rule.keyword);
+                if (keywords.some(k => incomingText.includes(k))) {
+                    matchedRule = rule;
+                    break;
+                }
             }
         }
 
         if (matchedRule) {
-            try {
-                await message.reply(matchedRule.response);
-            } catch (err) {
-                console.warn('Failed to reply to root rule:', err.message);
-            }
+            await message.reply(matchedRule.response);
             userContext.set(from, matchedRule._id);
-            console.log(`🤖 Replied to '${from}' with: ${matchedRule.response}`);
-
             const normalizedFrom = from.split('@')[0];
-            try {
-                await ChatbotConversation.findOneAndUpdate(
-                    { number: normalizedFrom },
-                    {
-                        $push: {
-                            chats: {
-                                query: incomingText,
-                                response: matchedRule.response,
-                                timestamp: new Date()
-                            }
-                        }
-                    },
-                    { upsert: true, new: true }
-                );
-            } catch (err) {
-                console.error('Failed to log conversation:', err.message);
-            }
-        } else {
-            console.log(`❌ No rule matched for: "${incomingText}" from ${from}`);
+            await ChatbotConversation.findOneAndUpdate(
+                { number: normalizedFrom },
+                { $push: { chats: { query: incomingText, response: matchedRule.response, timestamp: new Date() } } },
+                { upsert: true, new: true }
+            );
         }
     });
 
-
     client.initialize();
+
     return {
         client,
-        pauseBot: () => {
-            isBotPaused = true;
-            console.log('⏸️ Chatbot paused');
-        },
-        resumeBot: () => {
-            isBotPaused = false;
-            console.log('▶️ Chatbot resumed');
-        },
+        pauseBot: () => (isBotPaused = true),
+        resumeBot: () => (isBotPaused = false),
         isBotPaused: () => isBotPaused
     };
 };
 
-
+module.exports = createClient;

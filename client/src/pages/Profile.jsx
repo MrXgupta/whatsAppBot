@@ -10,73 +10,63 @@ const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 
 const Profile = () => {
     const dispatch = useDispatch();
-    const { qr, clientReady } = useSelector((state) => state.app);
+    const { qr, qrStatus } = useSelector((state) => state.app);
+    const user = useSelector((state) => state.user);
     const [loadingQr, setLoadingQr] = useState(true);
-    const [qrError, setQrError] = useState("");
+
+    useEffect(() => {
+        if (user?._id) {
+            socket.emit("join", user._id);
+        } else {
+            Swal.fire({
+                icon: "warning",
+                title: "User Not Found",
+                text: "Please login first.",
+            });
+        }
+    }, [user._id]);
 
     useEffect(() => {
         socket.on("qr", (qrCode) => {
+            console.log("✅ QR RECEIVED");
             dispatch(setQr(qrCode));
             dispatch(setQrStatus("loading"));
             dispatch(setClientReady(false));
             setLoadingQr(false);
+
             Swal.fire({
                 icon: "info",
                 title: "QR Code Ready",
                 text: "Please scan the QR code.",
-                timer: 2500,
                 toast: true,
                 position: "top-end",
+                timer: 2500,
                 showConfirmButton: false,
             });
         });
 
         socket.on("authenticated", () => {
             dispatch(setQrStatus("scanned"));
-            Swal.fire({
-                icon: "info",
-                title: "QR Scanned",
-                text: "Connecting to WhatsApp...",
-                toast: true,
-                timer: 2500,
-                position: "top-end",
-                showConfirmButton: false
-            });
+            Swal.fire("QR Scanned", "Connecting to WhatsApp...", "info");
         });
 
         socket.on("ready", () => {
             dispatch(setClientReady(true));
             dispatch(setQrStatus("ready"));
             dispatch(setQr(""));
-            Swal.fire({
-                icon: "success",
-                title: "Connected",
-                text: "WhatsApp client is ready!",
-                toast: true,
-                timer: 3000,
-                position: "top-end",
-                showConfirmButton: false,
-            });
+            Swal.fire("Connected", "WhatsApp client is ready!", "success");
         });
 
         socket.on("auth_failure", (msg) => {
             dispatch(setQrStatus("error"));
             dispatch(setClientReady(false));
-            Swal.fire({
-                icon: "error",
-                title: "Auth Failure",
-                text: msg || "WhatsApp authentication failed.",
-            });
+            Swal.fire("Auth Failure", msg || "WhatsApp auth failed.", "error");
         });
 
         socket.on("disconnected", (reason) => {
             dispatch(setQrStatus("error"));
             dispatch(setClientReady(false));
-            Swal.fire({
-                icon: "warning",
-                title: "Disconnected",
-                text: reason || "WhatsApp client was disconnected.",
-            });
+            Swal.fire("Disconnected", reason || "Client was disconnected.", "warning");
         });
 
         return () => {
@@ -88,15 +78,17 @@ const Profile = () => {
         };
     }, [dispatch]);
 
-
-
     return (
         <div className="p-6 max-w-2xl mx-auto">
             <h1 className="text-3xl font-bold mb-6">🔐 WhatsApp Client Status</h1>
 
+            {qrStatus === "idle" && <p className="text-gray-500">⏳ Waiting for client...</p>}
+            {qrStatus === "loading" && !qr && <p className="text-gray-500">⚙️ Preparing QR...</p>}
+
             <div className="bg-white shadow rounded p-6 border border-gray-200">
                 <QR />
             </div>
+
             <LinkedAccount />
         </div>
     );
