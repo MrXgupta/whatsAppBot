@@ -46,9 +46,9 @@ const authController = {
 
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-        if (!global.sessionManager.hasClient(user._id)) {
+        if (!sessionManager.hasClient(user._id)) {
             const client = require('../whatsapp/initClient')(user._id, global.io);
-            global.sessionManager.setClient(user._id, client);
+            sessionManager.setClient(user._id, client);
             console.log(`[SESSION CREATED] for user ${user._id}`);
         }
 

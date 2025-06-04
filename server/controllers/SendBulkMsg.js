@@ -2,11 +2,11 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const sessionManager = require('../whatsapp/sessionManager');
-
 const ContactGroup = require('../models/Contact');
 const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');
 const { isValidPhoneNumber } = require('../utils/validators');
+const {touchUserSession} = require("../utils/sessionActivity");
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -70,6 +70,7 @@ const SendBulkMsg = (io) => {
             // Async send
             (async () => {
                 for (let i = 0; i < validNumbers.length; i++) {
+                    await touchUserSession(userId);
                     const number = validNumbers[i];
                     let status = 'success';
                     let error = '';

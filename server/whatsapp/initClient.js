@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const ChatbotRule = require('../models/ChatBotRule');
 const KeywordGroup = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
+const {touchUserSession} = require("../utils/sessionActivity");
 
 const createClient = (userId, io) => {
     const clientId = userId.toString().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -74,6 +75,7 @@ const createClient = (userId, io) => {
         }
 
         if (matchedRule) {
+            await touchUserSession(userId);
             await message.reply(matchedRule.response);
             userContext.set(from, matchedRule._id);
             const normalizedFrom = from.split('@')[0];

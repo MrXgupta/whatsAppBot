@@ -3,7 +3,7 @@ const Campaign = require('../models/Campaign');
 const CreateCampaign = async (req, res) => {
     try {
         const { name, description } = req.body;
-        const userId = req.user.id; // from auth middleware
+        const userId = req.user.id;
 
         const campaign = await Campaign.create({ name, description, createdBy: userId });
 
