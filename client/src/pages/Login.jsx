@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { loginUser } from '../slices/userSlice.js'
 import {useDispatch} from "react-redux";
+import { Eye, EyeOff } from 'lucide-react';
+import logo from "../../public/logo.svg"
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -37,22 +40,59 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-                <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">
+            <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md transition-all">
+                <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">Welcome Back</h2>
+                <div className="flex justify-center">
+                <img className="w-[100px] hover:scale-110 transition-all" src={logo} alt=""/>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div>
-                        <label className="block text-sm font-medium">Email</label>
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full mt-1 p-2 border border-gray-300 rounded" />
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                        />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium">Password</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full mt-1 p-2 border border-gray-300 rounded" />
+
+                    <div className="relative">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 pr-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                        />
+                        <div
+                            className="absolute right-3 top-9 text-gray-500 cursor-pointer"
+                            onClick={() => setShowPassword(!showPassword)}
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </div>
                     </div>
-                    <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"> {loading ? 'Logging in...' : 'Login'}</button>
+
+                    <button
+                        type="submit"
+                        className="w-full bg-black hover:bg-gray-700 text-white font-medium py-2 rounded-lg transition"
+                    >
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
                 </form>
-                <p className="text-sm text-center mt-4">Don't have an account? <button className="text-blue-600 underline" onClick={()=>navigate("/signup")}>Sign up</button></p>
+
+                <p className="text-sm text-center text-gray-600 mt-5">
+                    Don't have an account?
+                    <button
+                        onClick={() => navigate('/signup')}
+                        className="ml-1 text-blue-600 hover:underline"
+                    >
+                        Sign up
+                    </button>
+                </p>
             </div>
         </div>
     );

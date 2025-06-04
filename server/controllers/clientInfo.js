@@ -6,9 +6,9 @@ const ClientInfo = async (req, res) => {
         console.log(userId , "hehe")
 
         const session = sessionManager.getClient(userId);
-        console.log("session", session)
+        // console.log("session", session)
         const client = session?.client;
-        console.log("client" , client)
+        // console.log("client" , client)
 
         console.log('[CHECK CLIENT]', userId, 'client?', !!client, 'client.info?', !!client?.info);
 

@@ -10,6 +10,7 @@ const controller = require('../controllers/chatbotController');
 const authController = require('../controllers/authController')
 const botController = require('../controllers/botController');
 const ClientInfo = require('../controllers/ClientInfo');
+const sessionManager = require("../whatsapp/sessionManager");
 
 module.exports = (io) => {
     const router = express.Router();
@@ -51,8 +52,6 @@ module.exports = (io) => {
 
     // WhatsApp Client Info & Logout
     router.post('/client-info', ClientInfo)
-
-
 
     router.post('/logout', async (req, res) => {
         try {

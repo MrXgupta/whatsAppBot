@@ -3,11 +3,14 @@ const WhatsappSession = require('../models/WhatsappSession');
 const sessions = {};
 const SESSION_TIMEOUT_MINUTES = 30;
 
-const getClient = (userId) => sessions[userId.toString()]?.client;
+const getClient = (userId) => sessions[userId.toString()]?.session;
 
-const setClient = async (userId, client) => {
-    const sessionObj = { client, lastActiveAt: Date.now() };
-    sessions[userId.toString()] = sessionObj;
+const setClient = async (userId, sessionObj) => {
+
+    sessions[userId.toString()] = {
+        session: sessionObj,
+        lastActiveAt: Date.now()
+    };
 
     await WhatsappSession.findOneAndUpdate(
         { userId },
@@ -17,10 +20,10 @@ const setClient = async (userId, client) => {
 };
 
 const hasClient = (userId) => {
-    const session = sessions[userId.toString()];
-    if (!session) return false;
+    const stored = sessions[userId.toString()];
+    if (!stored || !stored.session) return false;
 
-    const inactiveTime = Date.now() - new Date(session.lastActiveAt).getTime();
+    const inactiveTime = Date.now() - new Date(stored.lastActiveAt).getTime();
     const isTimedOut = inactiveTime > SESSION_TIMEOUT_MINUTES * 60 * 1000;
 
     if (isTimedOut) {

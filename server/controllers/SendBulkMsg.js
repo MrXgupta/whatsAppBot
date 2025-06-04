@@ -1,12 +1,13 @@
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
 const sessionManager = require('../whatsapp/sessionManager');
 const ContactGroup = require('../models/Contact');
 const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');
 const { isValidPhoneNumber } = require('../utils/validators');
-const {touchUserSession} = require("../utils/sessionActivity");
+const { updateActivity } = require('../whatsapp/sessionManager');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -18,22 +19,24 @@ const SendBulkMsg = (io) => {
             return res.status(400).json({ error: 'Missing required fields.' });
         }
 
+        if (!sessionManager.hasClient(userId)) {
+            return res.status(400).json({ error: 'WhatsApp session not initialized or expired for this user.' });
+        }
+
         const userClient = sessionManager.getClient(userId);
         console.log(`📦 Looking up client for ${userId}`);
         console.log(`🔍 Client found?`, !!userClient);
 
-        if (!userClient || !userClient.info || !userClient.info.wid) {
+        console.log('userClient.info:', userClient.info);
+        console.log('userClient.info.wid:', userClient.info?.wid);
+
+        if (!userClient.info?.wid?.user) {
             return res.status(400).json({ error: 'Client is not ready yet.' });
         }
 
         if (!userClient.pupPage) {
-            console.error(`[${userId}] puppeteer page not ready`);
+            console.error(`[${userId}] Puppeteer page not ready`);
             return res.status(500).json({ error: 'Puppeteer page not initialized. Try restarting session.' });
-        }
-
-
-        if (!userClient) {
-            return res.status(400).json({ error: 'WhatsApp session not initialized for this user.' });
         }
 
         minDelay = Math.max(1, Number(minDelay) || 30);
@@ -67,10 +70,11 @@ const SendBulkMsg = (io) => {
 
             res.status(200).json({ success: true, campaignId: campaign._id, total: validNumbers.length });
 
-            // Async send
+            // Start async message sending
             (async () => {
                 for (let i = 0; i < validNumbers.length; i++) {
-                    await touchUserSession(userId);
+                    await updateActivity(userId);
+
                     const number = validNumbers[i];
                     let status = 'success';
                     let error = '';

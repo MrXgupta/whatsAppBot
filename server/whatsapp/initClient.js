@@ -2,7 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const ChatbotRule = require('../models/ChatBotRule');
 const KeywordGroup = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
-const {touchUserSession} = require("../utils/sessionActivity");
+const { touchUserSession } = require("../utils/sessionActivity");
 
 const createClient = (userId, io) => {
     const clientId = userId.toString().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -29,11 +29,16 @@ const createClient = (userId, io) => {
         keywordGroups = await KeywordGroup.find({}).lean();
     };
 
-    client.on('qr', (qr) => io.to(userId.toString()).emit('qr', qr));
+    client.on('qr', (qr) => {
+        console.log('QR - ', qr);
+        io.to(userId.toString()).emit('qr', qr);
+    });
+
     client.on('ready', async () => {
         io.to(userId.toString()).emit('ready');
         await loadChatbotRules();
         await loadKeywordGroups();
+        await touchUserSession(userId);
     });
 
     client.on('auth_failure', (msg) => io.to(userId.toString()).emit('auth_failure', msg));
@@ -41,6 +46,7 @@ const createClient = (userId, io) => {
 
     client.on('message', async (message) => {
         if (isBotPaused) return;
+
         const from = message.from;
         const incomingText = message.body.trim().toLowerCase();
 
@@ -91,9 +97,9 @@ const createClient = (userId, io) => {
 
     return {
         client,
-        pauseBot: () => (isBotPaused = true),
-        resumeBot: () => (isBotPaused = false),
-        isBotPaused: () => isBotPaused
+        pauseBot: () => { isBotPaused = true; },
+        resumeBot: () => { isBotPaused = false; },
+        isBotPaused: () => isBotPaused,
     };
 };
 

@@ -48,7 +48,7 @@ const authController = {
 
         if (!sessionManager.hasClient(user._id)) {
             const client = require('../whatsapp/initClient')(user._id, global.io);
-            sessionManager.setClient(user._id, client);
+            // await sessionManager.setClient(user._id, client);
             console.log(`[SESSION CREATED] for user ${user._id}`);
         }
 
