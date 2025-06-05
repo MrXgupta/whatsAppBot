@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 import LinkedAccount from "../Components/Profile/LinkedAccount.jsx";
-import Loader from "../components/Loader.jsx";
+import Loader from "../Components/Loader.jsx";
 import {
     setQr,
     setClientReady,
