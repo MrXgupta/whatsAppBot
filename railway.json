@@ -1,7 +1,7 @@
 {
   "services": [
     {
-      "name": "api",
+      "name": "backend",
       "rootDir": "server"
     }
   ]
