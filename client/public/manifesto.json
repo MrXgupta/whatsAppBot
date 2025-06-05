@@ -1,0 +1,15 @@
+{
+  "short_name": "Wa-Automate",
+  "name": "Wa-Automated Tool for your business needs.",
+  "icons": [
+    {
+      "src": "./logo.svg",
+      "type": "image/svg",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
