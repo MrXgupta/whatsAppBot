@@ -1,6 +1,6 @@
 const WhatsappSession = require('../models/WhatsappSession');
 
-const touchUserSession = async (userId) => {
+const touchSession = async (userId) => {
     if (!userId) return;
 
     try {
@@ -14,4 +14,4 @@ const touchUserSession = async (userId) => {
     }
 };
 
-module.exports = { touchUserSession };
+module.exports = { touchSession };

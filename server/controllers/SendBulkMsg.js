@@ -1,13 +1,12 @@
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
-const sessionManager = require('../whatsapp/sessionManager');
 const ContactGroup = require('../models/Contact');
 const Campaign = require('../models/Campaign');
 const { MessageMedia } = require('whatsapp-web.js');
 const { isValidPhoneNumber } = require('../utils/validators');
-const { updateActivity } = require('../whatsapp/sessionManager');
+const { touchSession } = require('../utils/sessionActivity');
+const { getSessionStatus} = require('../controllers/startController');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -19,18 +18,15 @@ const SendBulkMsg = (io) => {
             return res.status(400).json({ error: 'Missing required fields.' });
         }
 
-        if (!sessionManager.hasClient(userId)) {
-            return res.status(400).json({ error: 'WhatsApp session not initialized or expired for this user.' });
+        const { status } = getSessionStatus(userId);
+        if (status !== 'ready') {
+            return res.status(400).json({ error: 'WhatsApp session not ready or expired.' });
         }
 
-        const userClient = sessionManager.getClient(userId);
-        console.log(`📦 Looking up client for ${userId}`);
-        console.log(`🔍 Client found?`, !!userClient);
+        const session = require('../controllers/startController').__getRawSession(userId);
+        const userClient = session?.client;
 
-        console.log('userClient.info:', userClient.info);
-        console.log('userClient.info.wid:', userClient.info?.wid);
-
-        if (!userClient.info?.wid?.user) {
+        if (!userClient || !userClient.info?.wid?.user) {
             return res.status(400).json({ error: 'Client is not ready yet.' });
         }
 
@@ -70,10 +66,10 @@ const SendBulkMsg = (io) => {
 
             res.status(200).json({ success: true, campaignId: campaign._id, total: validNumbers.length });
 
-            // Start async message sending
+            // Async messaging
             (async () => {
                 for (let i = 0; i < validNumbers.length; i++) {
-                    await updateActivity(userId);
+                    touchSession(userId);
 
                     const number = validNumbers[i];
                     let status = 'success';

@@ -5,7 +5,8 @@ const initialState = {
     name: '',
     email: '',
     token: '',
-    isAuthenticated: false
+    isAuthenticated: false,
+    isConnected: false,
 };
 
 const userSlice = createSlice({
@@ -26,9 +27,13 @@ const userSlice = createSlice({
             state.email = '';
             state.token = '';
             state.isAuthenticated = false;
+            state.isConnected = false;
+        },
+        setConnectionStatus: (state, action) => {
+            state.isConnected = action.payload;
         }
     }
 });
 
-export const { loginUser, logoutUser } = userSlice.actions;
+export const { loginUser, logoutUser, setConnectionStatus } = userSlice.actions;
 export default userSlice.reducer;

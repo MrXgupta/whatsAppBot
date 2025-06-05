@@ -1,14 +1,14 @@
-const WhatsappSession = require('../models/WhatsappSession');
+const WhatsappSession = require('../../models/WhatsappSession');
 
 const sessions = {};
 const SESSION_TIMEOUT_MINUTES = 30;
 
-const getClient = (userId) => sessions[userId.toString()]?.session;
+const getClient = (userId) => sessions[userId.toString()];
 
 const setClient = async (userId, sessionObj) => {
 
     sessions[userId.toString()] = {
-        session: sessionObj,
+        ...sessionObj,
         lastActiveAt: Date.now()
     };
 

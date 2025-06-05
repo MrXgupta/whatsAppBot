@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true }
 }, { timestamps: true });
 
-// Hash password before saving
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     const salt = await bcrypt.genSalt(10);
@@ -16,7 +15,6 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-// Method to compare passwords
 userSchema.methods.matchPassword = function (enteredPassword) {
     return bcrypt.compare(enteredPassword, this.password);
 };

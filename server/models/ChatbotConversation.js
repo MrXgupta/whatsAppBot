@@ -1,4 +1,3 @@
-// Chatbot Conversation Schema
 const mongoose = require("mongoose");
 const ChatEntrySchema = new mongoose.Schema({
     query: String,

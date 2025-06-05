@@ -1,14 +1,10 @@
-const sessionManager = require('../whatsapp/sessionManager');
+const sessionManager = require('./startController');
 
 const ClientInfo = async (req, res) => {
     try {
         const { userId } = req.body;
-        console.log(userId , "hehe")
-
         const session = sessionManager.getClient(userId);
-        // console.log("session", session)
         const client = session?.client;
-        // console.log("client" , client)
 
         console.log('[CHECK CLIENT]', userId, 'client?', !!client, 'client.info?', !!client?.info);
 
@@ -36,6 +32,6 @@ const ClientInfo = async (req, res) => {
         console.error('⚠️ Error fetching client info:', err.message);
         res.status(500).json({ error: 'Failed to fetch client info' });
     }
-}
+};
 
 module.exports = ClientInfo;

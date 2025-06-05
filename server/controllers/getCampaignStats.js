@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 
-// GET CAMPAIGN STATS (PAGINATED + SUMMARY)
 const getCampaignStats = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -98,7 +97,6 @@ const getCampaignStats = async (req, res) => {
     }
 };
 
-// GET ALL CAMPAIGN STATS (FOR CHARTING/OVERVIEW)
 const getAllCampaignStats = async (req, res) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.body.userId);

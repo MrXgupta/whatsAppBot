@@ -29,7 +29,7 @@ const Login = () => {
         try {
             const { data } = await axios.post(`${import.meta.env.VITE_BASE_URL}/login`, { email, password });
             console.log('Login success:', data);
-            navigate('/');
+            navigate('/profile');
             // localStorage.setItem('user', JSON.stringify(data));
             dispatch(loginUser(data));
         } catch (err) {

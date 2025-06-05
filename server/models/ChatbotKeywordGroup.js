@@ -1,4 +1,3 @@
-// Chatbot Keyword Group Schema
 const mongoose = require("mongoose");
 const chatbotKeywordGroupSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

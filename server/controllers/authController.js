@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const initClient = require('../whatsapp/initClient');
-const sessionManager = require('../whatsapp/sessionManager');
+const initClient = require('../Backup/whatsapp/initClient');
+const sessionManager = require('../Backup/whatsapp/sessionManager');
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -46,11 +46,11 @@ const authController = {
 
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-        if (!sessionManager.hasClient(user._id)) {
-            const client = require('../whatsapp/initClient')(user._id, global.io);
-            // await sessionManager.setClient(user._id, client);
-            console.log(`[SESSION CREATED] for user ${user._id}`);
-        }
+        // if (!sessionManager.hasClient(user._id)) {
+        //     const client = require('../Backup/whatsapp/initClient')(user._id, global.io);
+        //     await sessionManager.setClient(user._id, client);
+        //     console.log(`[SESSION CREATED] for user ${user._id}`);
+        // }
 
         res.status(200).json({
             _id: user._id,

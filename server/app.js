@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
-const bodyParser = require('body-parser');
 const routes = require('./routes/Route');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
-global.sessionManager = require('./whatsapp/sessionManager');
+global.sessionManager = require('./Backup/whatsapp/sessionManager');
+const initOrGetSession = require('./controllers/startController').initOrGetSession;
 
 global.io = io;
 
@@ -22,15 +22,21 @@ mongoose.connect(process.env.MONGODB_URI)
 
 io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
-    socket.on('join', (userId) => {
+
+    socket.on('join', async (userId) => {
         if (!userId) {
             console.warn(`User ID missing for socket ${socket.id}`);
             return;
         }
-        console.log(`📡 Socket ${socket.id} joining room: ${userId}`);
+
+        console.log(`Socket ${socket.id} joining room: ${userId}`);
         socket.join(userId.toString());
+
+        const result = await initOrGetSession(userId, io);
+        console.log(`Session status for ${userId}:`, result);
     });
 });
+
 
 app.use('/', routes(io));
 

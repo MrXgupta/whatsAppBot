@@ -1,8 +1,10 @@
+const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const ChatbotRule = require('../models/ChatBotRule');
-const KeywordGroup = require('../models/ChatbotKeywordGroup');
-const ChatbotConversation = require('../models/ChatbotConversation');
-const { touchUserSession } = require("../utils/sessionActivity");
+const ChatbotRule = require('../../models/ChatBotRule');
+const KeywordGroup = require('../../models/ChatbotKeywordGroup');
+const ChatbotConversation = require('../../models/ChatbotConversation');
+const { touchUserSession } = require("../../utils/sessionActivity");
+const sessionManager = require("./sessionManager");
 
 const createClient = (userId, io) => {
     const clientId = userId.toString().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -30,12 +32,14 @@ const createClient = (userId, io) => {
     };
 
     client.on('qr', (qr) => {
-        console.log('QR - ', qr);
+        qrcode.generate(qr);
         io.to(userId.toString()).emit('qr', qr);
     });
 
     client.on('ready', async () => {
+        console.log(`🟢 Client ready for ${clientId}`);
         io.to(userId.toString()).emit('ready');
+        // await sessionManager.setClient(userId, client);
         await loadChatbotRules();
         await loadKeywordGroups();
         await touchUserSession(userId);
@@ -49,6 +53,7 @@ const createClient = (userId, io) => {
 
         const from = message.from;
         const incomingText = message.body.trim().toLowerCase();
+        console.log(`🟢 Message from ${from}: ${incomingText}`);
 
         const resolveKeyword = (ruleKeyword) => {
             const group = keywordGroups.find(k => k.groupName?.toLowerCase() === ruleKeyword?.toLowerCase());

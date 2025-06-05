@@ -15,22 +15,20 @@ const Chatbot = () => {
     const [isBotActive, setIsBotActive] = useState(true);
 
     const fetchData = async () => {
-        const [rulesRes, keywordsRes, statusRes] = await Promise.all([
-            axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`, {
-                userId: user._id,
-            }),
-            axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`, {
-                userId: user._id,
-            }),
-            axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, {
-                userId: user._id,
-            })
-        ]);
-        setRules(rulesRes.data.rules || []);
-        setKeywordGroups(keywordsRes.data.groups || []);
-        setIsBotActive(statusRes.data?.isActive);
-        console.log(rulesRes.data, keywordsRes.data, statusRes.data);
+        try {
+            const [rulesRes, keywordsRes] = await Promise.all([
+                axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/rules`, { userId: user._id }),
+                axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot/keywords`, { userId: user._id }),
+                // axios.post(`${import.meta.env.VITE_BASE_URL}/bot/status`, { userId: user._id })
+            ]);
+            setRules(rulesRes.data.rules || []);
+            setKeywordGroups(keywordsRes.data.groups || []);
+            // setIsBotActive(!!statusRes.data?.isActive);
+        } catch (err) {
+            console.error("❌ Failed to fetch chatbot data:", err);
+        }
     };
+
 
     const toggleBotStatus = async () => {
         const newStatus = !isBotActive;

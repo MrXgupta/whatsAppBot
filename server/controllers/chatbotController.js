@@ -1,135 +1,69 @@
 const ChatbotRule = require('../models/ChatbotRule');
-const ChatbotKeywordGroup = require('../models/ChatbotKeywordGroup');
+const ChatbotKeyword = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
 
-exports.saveChatbotRule = async (req, res) => {
-    try {
-        const { userId, keyword, matchType = 'exact', response, parent, group } = req.body;
-        if (!userId || !keyword || !response) return res.status(400).json({ error: 'User ID, keyword, and response are required.' });
+const userContextMap = new Map(); // { userId => Map<number, lastRuleId> }
+const cache = new Map(); // cache chatbotRules/keywordGroups per userId
 
-        const rule = new ChatbotRule({ userId, keyword, matchType, response, parent, group });
-        await rule.save();
+async function loadChatbotData(userId) {
+    const rules = await ChatbotRule.find({ userId });
+    const keywordGroups = await ChatbotKeyword.find({ userId });
+    cache.set(userId, { rules, keywordGroups });
+}
 
-        if (parent) {
-            const parentRule = await ChatbotRule.findOne({ _id: parent, userId });
-            if (parentRule) {
-                parentRule.children.push(rule._id);
-                await parentRule.save();
+function resolveKeyword(ruleKeyword, keywordGroups) {
+    const group = keywordGroups.find(k => k.groupName?.toLowerCase() === ruleKeyword?.toLowerCase());
+    return group ? group.keywords.map(k => k.toLowerCase()) : [ruleKeyword.toLowerCase()];
+}
+
+async function handleIncomingMessage(userId, message) {
+    console.log("Chatbot Connected for" , userId)
+    if (!cache.has(userId)) await loadChatbotData(userId);
+
+    console.log(`Message from ${message.from}: ${message.body}`)
+
+    const { rules: chatbotRules, keywordGroups } = cache.get(userId);
+    const from = message.from;
+    const incomingText = message.body.trim().toLowerCase();
+
+    const userMap = userContextMap.get(userId) || new Map();
+    const lastRuleId = userMap.get(from);
+    let matchedRule = null;
+
+    const matchRules = (rulesToCheck) => {
+        for (const rule of rulesToCheck) {
+            const keywords = resolveKeyword(rule.keyword, keywordGroups);
+            if (keywords.some(k => incomingText.includes(k))) {
+                return rule;
             }
         }
+        return null;
+    };
 
-        res.status(201).json({ success: true, message: 'Rule created', rule });
-    } catch (err) {
-        console.error('❌ Error saving rule:', err);
-        res.status(500).json({ error: 'Internal server error.' });
+    if (lastRuleId) {
+        const childRules = chatbotRules.filter(r => r.parentRuleId?.toString() === lastRuleId.toString());
+        matchedRule = matchRules(childRules);
     }
-};
 
-exports.getAllChatbotRules = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
-
-        const rules = await ChatbotRule.find({ userId })
-            .populate('children')
-            .populate('parent')
-            .populate('group');
-
-        res.status(200).json({ success: true, rules });
-    } catch (err) {
-        console.error('❌ Error fetching rules:', err);
-        res.status(500).json({ error: 'Internal server error.' });
+    if (!matchedRule) {
+        const rootRules = chatbotRules.filter(r => !r.parentRuleId);
+        matchedRule = matchRules(rootRules);
     }
-};
 
-exports.saveKeywordGroup = async (req, res) => {
-    try {
-        const { userId, groupName, keywords } = req.body;
-        if (!userId || !groupName || !Array.isArray(keywords)) return res.status(400).json({ error: 'User ID, group name, and keywords are required.' });
+    if (matchedRule) {
+        await message.reply(matchedRule.response);
+        userMap.set(from, matchedRule._id);
+        userContextMap.set(userId, userMap);
 
-        const group = new ChatbotKeywordGroup({ userId, groupName, keywords });
-        await group.save();
-
-        res.status(201).json({ success: true, message: 'Keyword group created', group });
-    } catch (err) {
-        console.error('❌ Error saving group:', err);
-        res.status(500).json({ error: 'Internal server error.' });
+        await ChatbotConversation.findOneAndUpdate(
+            { number: from.split('@')[0], userId },
+            { $push: { chats: { query: incomingText, response: matchedRule.response, timestamp: new Date() } } },
+            { upsert: true, new: true }
+        );
     }
-};
+}
 
-exports.getAllKeywordGroups = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
-
-        const groups = await ChatbotKeywordGroup.find({ userId });
-        res.status(200).json({ success: true, groups });
-    } catch (err) {
-        console.error('❌ Error fetching keyword groups:', err);
-        res.status(500).json({ error: 'Internal server error.' });
-    }
-};
-
-exports.getConversation = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
-
-        const conversations = await ChatbotConversation.find({ userId });
-
-        const sorted = conversations.map(convo => {
-            const sortedChats = [...convo.chats].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            return {
-                ...convo._doc,
-                chats: sortedChats
-            };
-        });
-
-        res.json({
-            success: true,
-            conversation: sorted
-        });
-    } catch (err) {
-        console.error('Error fetching chatbot conversations:', err);
-        res.status(500).json({
-            success: false,
-            message: 'Internal Server Error'
-        });
-    }
-};
-
-exports.getBotReplyStats = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'User ID is required.' });
-
-        const conversations = await ChatbotConversation.find({ userId });
-
-        let totalReplies = 0;
-        let successCount = 0;
-        let failedCount = 0;
-
-        conversations.forEach(conv => {
-            conv.chats.forEach(chat => {
-                totalReplies++;
-                if (chat.response && chat.response.length > 0) {
-                    successCount++;
-                } else {
-                    failedCount++;
-                }
-            });
-        });
-
-        res.status(200).json({
-            success: true,
-            stats: {
-                total: totalReplies,
-                sent: successCount,
-                failed: failedCount
-            }
-        });
-    } catch (err) {
-        console.error('Error fetching bot reply stats:', err);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+module.exports = {
+    handleIncomingMessage,
+    loadChatbotData
 };

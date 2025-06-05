@@ -1,4 +1,4 @@
-const sessionManager = require('../whatsapp/sessionManager');
+const sessionManager = require('../Backup/whatsapp/sessionManager');
 
 exports.setBotStatus = (req, res) => {
     const { isActive, userId } = req.body;

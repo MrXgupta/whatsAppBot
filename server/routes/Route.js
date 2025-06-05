@@ -6,11 +6,12 @@ const { AddContactGroup, getContacts, getContactsById, deleteGroupContact } = re
 const {getCampaignStats , getAllCampaignStats} = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
-const controller = require('../controllers/chatbotController');
+const controller = require('../controllers/chatBotData');
 const authController = require('../controllers/authController')
-const botController = require('../controllers/botController');
+const botController = require('../controllers/chatBotStatus');
 const ClientInfo = require('../controllers/ClientInfo');
-const sessionManager = require("../whatsapp/sessionManager");
+const whatsappSessionController = require('../controllers/startController');
+const whatsappChatsController = require('../controllers/WhatsAppChatController');
 
 module.exports = (io) => {
     const router = express.Router();
@@ -18,7 +19,6 @@ module.exports = (io) => {
     //auth router
     router.post("/signup", authController.signup);
     router.post("/login", authController.login);
-
 
     // Bulk Messaging Routes
     router.post('/send', ...sendBulkMsg(io));
@@ -40,8 +40,8 @@ module.exports = (io) => {
 
     // Chatbot Routes
     router.post('/chatbot/save-rules', controller.saveChatbotRule);
-    router.post('/chatbot/rules', controller.getAllChatbotRules);
     router.post('/chatbot/save-keywords', controller.saveKeywordGroup);
+    router.post('/chatbot/rules', controller.getAllChatbotRules);
     router.post('/chatbot/keywords', controller.getAllKeywordGroups);
     router.post('/chatbot-conversations', controller.getConversation);
     router.post('/chatbotStats', controller.getBotReplyStats);
@@ -49,6 +49,13 @@ module.exports = (io) => {
     // Bot
     router.post('/bot/status', botController.setBotStatus);
     router.get('/bot/status', botController.getBotStatus);
+
+
+        // WhatsApp Chats Routes
+    router.post('/chats/history', whatsappChatsController.fetchChatHistory);
+    router.post('/chats/contacts', whatsappChatsController.fetchAllContacts);
+    router.post('/chats/send', whatsappChatsController.sendMessage);
+    router.post('/chats/mark-read', whatsappChatsController.markAsRead);
 
     // WhatsApp Client Info & Logout
     router.post('/client-info', ClientInfo)
@@ -66,5 +73,39 @@ module.exports = (io) => {
         }
     });
 
+    router.post('/session/init', async (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+        try {
+            const result = await whatsappSessionController.initOrGetSession(userId, req.app.get(io));
+            res.json(result);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({ error: 'Failed to initialize session' });
+        }
+    });
+
+    router.post('/session/status', (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+        const status = whatsappSessionController.getSessionStatus(userId);
+        res.json(status);
+    });
+
+    router.post('/session/touch', async (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+        try {
+            await whatsappSessionController.touchSession(userId);
+            res.json({ success: true });
+        } catch (e) {
+            res.status(500).json({ error: 'Failed to update session activity' });
+        }
+    });
+
+    module.exports = router;
     return router;
 };
