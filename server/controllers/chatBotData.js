@@ -1,4 +1,4 @@
-const ChatbotRule = require('../models/ChatbotRule');
+const ChatbotRule = require('../models/ChatBotRule');
 const ChatbotKeywordGroup = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
 const {loadChatbotData} = require("./chatbotController");
