@@ -2,14 +2,14 @@ const express = require('express');
 const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
 const {CreateCampaign, deleteCampaign} = require('../controllers/createCampaign');
-const {AddContactGroup, getContacts, getContactsById, deleteGroupContact} = require('../controllers/AddContacts');
+const {AddContactGroup, getContacts, getContactsById, deleteGroupContact} = require('../controllers/addContacts');
 const {getCampaignStats, getAllCampaignStats} = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatBotData');
 const authController = require('../controllers/authController')
 const botController = require('../controllers/chatBotStatus');
-const ClientInfo = require('../controllers/ClientInfo');
+const ClientInfo = require('../controllers/clientInfo');
 const whatsappSessionController = require('../controllers/startController');
 const whatsappChatsController = require('../controllers/WhatsAppChatController');
 
