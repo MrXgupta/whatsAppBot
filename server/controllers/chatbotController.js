@@ -2,13 +2,13 @@ const ChatbotRule = require('../models/ChatBotRule');
 const ChatbotKeyword = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
 
-const userContextMap = new Map(); // { userId => Map<number, lastRuleId> }
-const cache = new Map(); // cache chatbotRules/keywordGroups per userId
+const userContextMap = new Map();
+const cache = new Map();
 
 async function loadChatbotData(userId) {
-    const rules = await ChatbotRule.find({ userId });
-    const keywordGroups = await ChatbotKeyword.find({ userId });
-    cache.set(userId, { rules, keywordGroups });
+    const rules = await ChatbotRule.find({userId});
+    const keywordGroups = await ChatbotKeyword.find({userId});
+    cache.set(userId, {rules, keywordGroups});
 }
 
 function resolveKeyword(ruleKeyword, keywordGroups) {
@@ -17,12 +17,21 @@ function resolveKeyword(ruleKeyword, keywordGroups) {
 }
 
 async function handleIncomingMessage(userId, message) {
-    console.log("Chatbot Connected for" , userId)
+    console.log("Chatbot Connected for", userId)
+
+    if (
+        message.from.includes('g.us') ||
+        message.from.includes('broadcast') ||
+        message.from.includes('status') ||
+        message.from.includes('c.us') === false
+    ) {
+        return;
+    }
     if (!cache.has(userId)) await loadChatbotData(userId);
 
     console.log(`Message from ${message.from}: ${message.body}`)
 
-    const { rules: chatbotRules, keywordGroups } = cache.get(userId);
+    const {rules: chatbotRules, keywordGroups} = cache.get(userId);
     const from = message.from;
     const incomingText = message.body.trim().toLowerCase();
 
@@ -56,9 +65,9 @@ async function handleIncomingMessage(userId, message) {
         userContextMap.set(userId, userMap);
 
         await ChatbotConversation.findOneAndUpdate(
-            { number: from.split('@')[0], userId },
-            { $push: { chats: { query: incomingText, response: matchedRule.response, timestamp: new Date() } } },
-            { upsert: true, new: true }
+            {number: from.split('@')[0], userId},
+            {$push: {chats: {query: incomingText, response: matchedRule.response, timestamp: new Date()}}},
+            {upsert: true, new: true}
         );
     }
 }

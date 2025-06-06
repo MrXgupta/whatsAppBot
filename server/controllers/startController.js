@@ -1,9 +1,9 @@
 const qrcode = require('qrcode-terminal');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const {Client, LocalAuth} = require('whatsapp-web.js');
 const WhatsappSession = require('../models/WhatsappSession');
 const path = require('path');
 const fs = require('fs');
-const { handleIncomingMessage, loadChatbotData } = require('../controllers/chatbotController');
+const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbotController');
 
 const SESSION_TIMEOUT_MINUTES = 30;
 const sessions = new Map();
@@ -30,13 +30,13 @@ async function _destroySession(userId) {
     }
 
     sessions.delete(userId);
-    await WhatsappSession.deleteOne({ userId });
+    await WhatsappSession.deleteOne({userId});
 
     setTimeout(() => {
         try {
             const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
             const authPath = path.join('./.wwebjs_auth', `session-${clientId}`);
-            fs.rm(authPath, { recursive: true, force: true }, (err) => {
+            fs.rm(authPath, {recursive: true, force: true}, (err) => {
                 if (err) {
                     console.error(`Failed to delete auth folder for ${userId}:`, err.message);
                 } else {
@@ -72,17 +72,17 @@ async function initOrGetSession(userId, io) {
         session.io = io;
         if (_isSessionActive(session)) {
             console.log(`🟢 Session for user ${userId} already active`);
-            return { status: session.status };
+            return {status: session.status};
         }
         await _destroySession(userId);
     }
 
     const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     const client = new Client({
-        authStrategy: new LocalAuth({ clientId, dataPath: './.wwebjs_auth' }),
+        authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            executablePath: '/usr/bin/chromium-browser',
+            // executablePath: '/usr/bin/chromium-browser',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         }
     });
@@ -101,7 +101,7 @@ async function initOrGetSession(userId, io) {
     client.on('qr', (qr) => {
         console.log(`🟢 QR received for user ${userId}`);
         try {
-            qrcode.generate(qr, { small: true });
+            qrcode.generate(qr, {small: true});
         } catch {
             console.log('\n📲 Scan the QR code below:\n', qr);
         }
@@ -120,9 +120,9 @@ async function initOrGetSession(userId, io) {
         _resetTimeout(userId);
         await loadChatbotData(userId);
         await WhatsappSession.findOneAndUpdate(
-            { userId },
-            { sessionData: {}, lastActiveAt: new Date() },
-            { upsert: true, new: true }
+            {userId},
+            {sessionData: {}, lastActiveAt: new Date()},
+            {upsert: true, new: true}
         );
     });
 
@@ -131,8 +131,7 @@ async function initOrGetSession(userId, io) {
         await handleIncomingMessage(userId, message);
 
         if (!message.fromMe) {
-            // Emit to the specific user's socket
-            io.to(userId).emit('new-message', {
+            session.io?.to(userId).emit('new-message', {
                 userId: userId,
                 id: message.id.id,
                 from: message.from.split('@')[0],
@@ -141,7 +140,6 @@ async function initOrGetSession(userId, io) {
                 timestamp: message.timestamp * 1000,
             });
         }
-
     });
 
     client.on('auth_failure', (msg) => {
@@ -163,7 +161,7 @@ async function initOrGetSession(userId, io) {
 
     _resetTimeout(userId);
 
-    return { status: session.status, message: 'Session initialized, waiting for QR' };
+    return {status: session.status, message: 'Session initialized, waiting for QR'};
 }
 
 function getClient(userId) {
@@ -172,7 +170,7 @@ function getClient(userId) {
 
 function getSessionStatus(userId) {
     const session = sessions.get(userId.toString());
-    if (!session) return { status: 'no_session' };
+    if (!session) return {status: 'no_session'};
     return {
         status: session.status,
         qr: session.qr || null,
@@ -188,7 +186,7 @@ function hasClient(userId) {
 
     if (isTimedOut) {
         sessions.delete(userId.toString());
-        WhatsappSession.deleteOne({ userId }).catch(console.error);
+        WhatsappSession.deleteOne({userId}).catch(console.error);
         console.log(`Session for user ${userId} timed out and was deleted.`);
         return false;
     }

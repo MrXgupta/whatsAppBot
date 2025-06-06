@@ -1,9 +1,9 @@
 const express = require('express');
 const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
-const { CreateCampaign, deleteCampaign } = require('../controllers/CreateCampaign');
-const { AddContactGroup, getContacts, getContactsById, deleteGroupContact } = require('../controllers/AddContacts');
-const {getCampaignStats , getAllCampaignStats} = require('../controllers/getCampaignStats');
+const {CreateCampaign, deleteCampaign} = require('../controllers/CreateCampaign');
+const {AddContactGroup, getContacts, getContactsById, deleteGroupContact} = require('../controllers/AddContacts');
+const {getCampaignStats, getAllCampaignStats} = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatBotData');
@@ -33,7 +33,7 @@ module.exports = (io) => {
 
     router.post('/contacts', AddContactGroup);
     router.post('/getContacts', getContacts);
-    router.delete('/contacts/:id', deleteGroupContact);
+    router.delete('/contacts/:id/:userId', deleteGroupContact);
     router.get('/contacts/:id', getContactsById);
 
     router.post('/upload-csv', uploadCSV);
@@ -51,7 +51,7 @@ module.exports = (io) => {
     router.get('/bot/status', botController.getBotStatus);
 
 
-        // WhatsApp Chats Routes
+    // WhatsApp Chats Routes
     router.post('/chats/history', whatsappChatsController.fetchChatHistory);
     router.post('/chats/contacts', whatsappChatsController.fetchAllContacts);
     router.post('/chats/send', whatsappChatsController.sendMessage);
@@ -66,43 +66,43 @@ module.exports = (io) => {
             isClientReadyRef.value = false;
             await client.destroy();
             client.initialize();
-            res.json({ success: true });
+            res.json({success: true});
         } catch (err) {
             console.error("Logout error:", err);
-            res.status(500).json({ error: "Logout failed." });
+            res.status(500).json({error: "Logout failed."});
         }
     });
 
     router.post('/session/init', async (req, res) => {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'userId is required' });
+        const {userId} = req.body;
+        if (!userId) return res.status(400).json({error: 'userId is required'});
 
         try {
             const result = await whatsappSessionController.initOrGetSession(userId, req.app.get(io));
             res.json(result);
         } catch (e) {
             console.error(e);
-            res.status(500).json({ error: 'Failed to initialize session' });
+            res.status(500).json({error: 'Failed to initialize session'});
         }
     });
 
     router.post('/session/status', (req, res) => {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'userId is required' });
+        const {userId} = req.body;
+        if (!userId) return res.status(400).json({error: 'userId is required'});
 
         const status = whatsappSessionController.getSessionStatus(userId);
         res.json(status);
     });
 
     router.post('/session/touch', async (req, res) => {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'userId is required' });
+        const {userId} = req.body;
+        if (!userId) return res.status(400).json({error: 'userId is required'});
 
         try {
             await whatsappSessionController.touchSession(userId);
-            res.json({ success: true });
+            res.json({success: true});
         } catch (e) {
-            res.status(500).json({ error: 'Failed to update session activity' });
+            res.status(500).json({error: 'Failed to update session activity'});
         }
     });
 

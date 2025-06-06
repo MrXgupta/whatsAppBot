@@ -9,22 +9,22 @@ const validateNumber = (number) => {
 
 const AddContactGroup = async (req, res) => {
     try {
-        const { userId, groupName, filePath } = req.body;
+        const {userId, groupName, filePath} = req.body;
 
         if (!userId || !groupName || !filePath) {
-            return res.status(400).json({ error: 'User ID, group name, and file path are required.' });
+            return res.status(400).json({error: 'User ID, group name, and file path are required.'});
         }
 
-        const existing = await Contacts.findOne({ userId, groupName });
+        const existing = await Contacts.findOne({userId, groupName});
         if (existing) {
-            return res.status(400).json({ error: 'Group name already exists for this user.' });
+            return res.status(400).json({error: 'Group name already exists for this user.'});
         }
 
         const numbers = [];
         let rowCount = 0;
 
         fs.createReadStream(filePath)
-            .pipe(csv({ headers: ['number'], skipLines: 1 }))
+            .pipe(csv({headers: ['number'], skipLines: 1}))
             .on('data', (row) => {
                 rowCount++;
                 let raw = row.number?.toString().trim();
@@ -37,7 +37,7 @@ const AddContactGroup = async (req, res) => {
             })
             .on('end', async () => {
                 if (!numbers.length) {
-                    return res.status(400).json({ error: 'CSV contains no valid numbers.' });
+                    return res.status(400).json({error: 'CSV contains no valid numbers.'});
                 }
 
                 const group = await Contacts.create({
@@ -92,31 +92,31 @@ const AddContactGroup = async (req, res) => {
 
     } catch (error) {
         console.error('Error saving contact group:', error);
-        res.status(500).json({ error: 'Failed to save contact group.' });
+        res.status(500).json({error: 'Failed to save contact group.'});
     }
 };
 
 const getContacts = async (req, res) => {
     try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ error: 'User ID is required' });
+        const {userId} = req.body;
+        if (!userId) return res.status(400).json({error: 'User ID is required'});
 
-        const groups = await Contacts.find({ userId }).sort({ addedAt: -1 });
-        res.status(200).json({ success: true, groups });
+        const groups = await Contacts.find({userId}).sort({addedAt: -1});
+        res.status(200).json({success: true, groups});
     } catch (error) {
         console.error('Error fetching contacts:', error);
-        res.status(500).json({ error: 'Failed to fetch contacts.' });
+        res.status(500).json({error: 'Failed to fetch contacts.'});
     }
 };
 
 const getContactsById = async (req, res) => {
-    const { id } = req.params;
-    const { type = 'all', page = 1, limit = 10 } = req.query;
+    const {id} = req.params;
+    const {type = 'all', page = 1, limit = 10} = req.query;
 
     try {
-        const group = await Contacts.findOne({ _id: id });
+        const group = await Contacts.findOne({_id: id});
         if (!group) {
-            return res.status(404).json({ error: 'Group not found for this user' });
+            return res.status(404).json({error: 'Group not found for this user'});
         }
 
         let numbersToSend = [];
@@ -150,26 +150,25 @@ const getContactsById = async (req, res) => {
         });
     } catch (err) {
         console.error('❌ Error fetching group by ID:', err);
-        res.status(500).json({ error: 'Failed to get the details' });
+        res.status(500).json({error: 'Failed to get the details'});
     }
 };
 
 const deleteGroupContact = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { userId } = req.body;
+        const {id, userId} = req.params;
 
-        const deleted = await Contacts.findOneAndDelete({ _id: id, userId });
+        const deleted = await Contacts.findOneAndDelete({_id: id, userId});
 
         if (!deleted) {
-            return res.status(404).json({ success: false, message: "Group contact not found or unauthorized" });
+            return res.status(404).json({success: false, message: "Group contact not found or unauthorized"});
         }
 
-        res.status(200).json({ success: true, message: "Group contact deleted successfully" });
+        res.status(200).json({success: true, message: "Group contact deleted successfully"});
     } catch (err) {
         console.error("Error deleting group contact:", err);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({success: false, message: "Internal server error"});
     }
 };
 
-module.exports = { AddContactGroup, getContacts, getContactsById, deleteGroupContact };
+module.exports = {AddContactGroup, getContacts, getContactsById, deleteGroupContact};
