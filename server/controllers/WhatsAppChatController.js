@@ -1,17 +1,14 @@
 // server/controllers/whatsappChatsController.js
-const { sessions } = require('./startController');
+const {sessions} = require('./startController');
 
-/**
- * Fetch chat history for a specific contact/number
- */
 const fetchChatHistory = async (req, res) => {
     try {
-        const { userId, contactNumber } = req.body;
-        
+        const {userId, contactNumber} = req.body;
+
         if (!userId || !contactNumber) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'User ID and contact number are required' 
+            return res.status(400).json({
+                success: false,
+                error: 'User ID and contact number are required'
             });
         }
 
@@ -20,37 +17,37 @@ const fetchChatHistory = async (req, res) => {
 
         // Check if user has an active session
         if (!sessions.has(userId.toString())) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No active WhatsApp session found' 
+            return res.status(400).json({
+                success: false,
+                error: 'No active WhatsApp session found'
             });
         }
 
         const session = sessions.get(userId.toString());
-        
+
         if (session.status !== 'ready') {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'WhatsApp session is not ready' 
+            return res.status(400).json({
+                success: false,
+                error: 'WhatsApp session is not ready'
             });
         }
-        
+
         // Update last active time
         session.lastActive = Date.now();
-        
+
         // Get chat with this contact
         const chat = await session.client.getChatById(`${formattedNumber}@c.us`);
-        
+
         if (!chat) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Chat not found with this contact' 
+            return res.status(404).json({
+                success: false,
+                error: 'Chat not found with this contact'
             });
         }
-        
+
         // Fetch last 100 messages (adjust limit as needed)
-        const messages = await chat.fetchMessages({ limit: 100 });
-        
+        const messages = await chat.fetchMessages({limit: 100});
+
         // Format messages for frontend consumption
         const formattedMessages = messages.map(msg => ({
             id: msg.id.id,
@@ -61,7 +58,7 @@ const fetchChatHistory = async (req, res) => {
             type: msg.type,
             // Include other needed fields
         }));
-        
+
         return res.status(200).json({
             success: true,
             contact: {
@@ -71,12 +68,12 @@ const fetchChatHistory = async (req, res) => {
             },
             messages: formattedMessages
         });
-        
+
     } catch (error) {
         console.error('Error fetching chat history:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch chat history' 
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch chat history'
         });
     }
 };
@@ -86,38 +83,38 @@ const fetchChatHistory = async (req, res) => {
  */
 const fetchAllContacts = async (req, res) => {
     try {
-        const { userId } = req.body;
-        
+        const {userId} = req.body;
+
         if (!userId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'User ID is required' 
+            return res.status(400).json({
+                success: false,
+                error: 'User ID is required'
             });
         }
-        
+
         // Check if user has an active session
         if (!sessions.has(userId.toString())) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No active WhatsApp session found' 
+            return res.status(400).json({
+                success: false,
+                error: 'No active WhatsApp session found'
             });
         }
-        
+
         const session = sessions.get(userId.toString());
-        
+
         if (session.status !== 'ready') {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'WhatsApp session is not ready' 
+            return res.status(400).json({
+                success: false,
+                error: 'WhatsApp session is not ready'
             });
         }
-        
+
         // Update last active time
         session.lastActive = Date.now();
-        
+
         // Fetch all chats
         const chats = await session.client.getChats();
-        
+
         // Format chats/contacts for frontend
         const contacts = chats.map(chat => ({
             id: chat.id.user,
@@ -131,17 +128,17 @@ const fetchAllContacts = async (req, res) => {
             isGroup: chat.isGroup,
             timestamp: chat.timestamp * 1000
         }));
-        
+
         return res.status(200).json({
             success: true,
             contacts: contacts
         });
-        
+
     } catch (error) {
         console.error('Error fetching contacts:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch contacts' 
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch contacts'
         });
     }
 };
@@ -151,41 +148,41 @@ const fetchAllContacts = async (req, res) => {
  */
 const sendMessage = async (req, res) => {
     try {
-        const { userId, contactNumber, message } = req.body;
-        
+        const {userId, contactNumber, message} = req.body;
+
         if (!userId || !contactNumber || !message) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'User ID, contact number, and message are required' 
+            return res.status(400).json({
+                success: false,
+                error: 'User ID, contact number, and message are required'
             });
         }
-        
+
         // Convert to string and ensure consistent format
         const formattedNumber = contactNumber.toString().replace(/\D/g, '');
-        
+
         // Check if user has an active session
         if (!sessions.has(userId.toString())) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'No active WhatsApp session found' 
+            return res.status(400).json({
+                success: false,
+                error: 'No active WhatsApp session found'
             });
         }
-        
+
         const session = sessions.get(userId.toString());
-        
+
         if (session.status !== 'ready') {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'WhatsApp session is not ready' 
+            return res.status(400).json({
+                success: false,
+                error: 'WhatsApp session is not ready'
             });
         }
-        
+
         // Update last active time
         session.lastActive = Date.now();
-        
+
         // Send message to the contact
         const sentMessage = await session.client.sendMessage(`${formattedNumber}@c.us`, message);
-        
+
         return res.status(200).json({
             success: true,
             message: 'Message sent successfully',
@@ -194,12 +191,12 @@ const sendMessage = async (req, res) => {
                 timestamp: sentMessage.timestamp * 1000
             }
         });
-        
+
     } catch (error) {
         console.error('Error sending message:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: 'Failed to send message' 
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to send message'
         });
     }
 };
@@ -209,7 +206,7 @@ const sendMessage = async (req, res) => {
  */
 const markAsRead = async (req, res) => {
     try {
-        const { userId, contactNumber } = req.body;
+        const {userId, contactNumber} = req.body;
 
         if (!userId || !contactNumber) {
             return res.status(400).json({
