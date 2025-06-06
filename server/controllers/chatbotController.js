@@ -5,18 +5,21 @@ const ChatbotConversation = require('../models/ChatbotConversation');
 const userContextMap = new Map();
 const cache = new Map();
 
-async function loadChatbotData(userId) {
+// This will load the rules and the keywords from the db this will trigger while saving the rules and keywords and on client Ready
+const loadChatbotData = async (userId) => {
     const rules = await ChatbotRule.find({userId});
     const keywordGroups = await ChatbotKeyword.find({userId});
     cache.set(userId, {rules, keywordGroups});
 }
 
-function resolveKeyword(ruleKeyword, keywordGroups) {
+// This function is find the rule and trigger the res
+const resolveKeyword = (ruleKeyword, keywordGroups) => {
     const group = keywordGroups.find(k => k.groupName?.toLowerCase() === ruleKeyword?.toLowerCase());
     return group ? group.keywords.map(k => k.toLowerCase()) : [ruleKeyword.toLowerCase()];
 }
 
-async function handleIncomingMessage(userId, message) {
+// This function is responsible to send messages to contacts, it will receive and send res automatically
+const handleIncomingMessage = async (userId, message) => {
     console.log("Chatbot Connected for", userId)
 
     if (

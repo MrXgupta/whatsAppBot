@@ -8,6 +8,7 @@ const generateToken = (user) => {
     );
 };
 
+// This function is responsible for login and signup process
 const authController = {
     signup: async (req, res) => {
         const {name, email, number, password, confirmPassword} = req.body;

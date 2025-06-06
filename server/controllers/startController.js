@@ -8,6 +8,7 @@ const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbot
 const SESSION_TIMEOUT_MINUTES = 30;
 const sessions = new Map();
 
+// checking if the session is active or not
 function _isSessionActive(session) {
     if (!session) return false;
     if (session.status !== 'ready' && session.status !== 'pending') return false;
@@ -15,6 +16,7 @@ function _isSessionActive(session) {
     return inactiveMs <= SESSION_TIMEOUT_MINUTES * 60 * 1000;
 }
 
+// destroy the session and del the session dir from .wwebjs_auth too
 async function _destroySession(userId) {
     userId = userId.toString();
 
@@ -51,6 +53,7 @@ async function _destroySession(userId) {
     console.log(`Session for user ${userId} destroyed and DB entry deleted.`);
 }
 
+// reset time and if time out then destroy the session
 function _resetTimeout(userId) {
     userId = userId.toString();
     const session = sessions.get(userId);
@@ -63,6 +66,7 @@ function _resetTimeout(userId) {
     }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
 }
 
+// main function to connect the client check if the session is available or not or create a new session
 async function initOrGetSession(userId, io) {
     userId = userId.toString();
     console.log(`🟢 Initializing or getting session for user ${userId}`);
@@ -82,7 +86,7 @@ async function initOrGetSession(userId, io) {
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            // executablePath: '/usr/bin/chromium-browser',
+            executablePath: '/usr/bin/chromium-browser',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         }
     });
@@ -164,10 +168,12 @@ async function initOrGetSession(userId, io) {
     return {status: session.status, message: 'Session initialized, waiting for QR'};
 }
 
+// checking if the session variable has the session or not if not the req to init will be sent again and the session will get stored
 function getClient(userId) {
     return sessions.get(userId.toString());
 }
 
+// fetching the session status
 function getSessionStatus(userId) {
     const session = sessions.get(userId.toString());
     if (!session) return {status: 'no_session'};
@@ -177,6 +183,7 @@ function getSessionStatus(userId) {
     };
 }
 
+// fetching the client
 function hasClient(userId) {
     const session = sessions.get(userId.toString());
     if (!session || !session.client) return false;
@@ -193,6 +200,7 @@ function hasClient(userId) {
     return true;
 }
 
+// this will fetch the raw session
 function __getRawSession(userId) {
     userId = userId.toString();
     return sessions.get(userId);

@@ -1,4 +1,3 @@
-const path = require('path');
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -11,15 +10,16 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage }).single('contactsFile');
+const upload = multer({storage}).single('contactsFile');
 
+// This is to upload csv to uploads
 const uploadCSV = (req, res) => {
     upload(req, res, function (err) {
         if (err) {
             console.error('❌ Multer error:', err);
-            return res.status(500).json({ error: 'File upload failed.' });
+            return res.status(500).json({error: 'File upload failed.'});
         }
-        return res.status(200).json({ filePath: req.file.path });
+        return res.status(200).json({filePath: req.file.path});
     });
 };
 

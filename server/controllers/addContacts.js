@@ -2,11 +2,13 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const Contacts = require('../models/Contact');
 
+// This function will validate the number
 const validateNumber = (number) => {
     const cleaned = number.replace(/\D/g, '');
     return /^91[6-9][0-9]{9}$/.test(cleaned);
 };
 
+// This function will validate and save all the numbers in the db , it will validate in Background
 const AddContactGroup = async (req, res) => {
     try {
         const {userId, groupName, filePath} = req.body;
@@ -96,6 +98,7 @@ const AddContactGroup = async (req, res) => {
     }
 };
 
+// Function to fetch the contacts groups per user
 const getContacts = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -109,6 +112,7 @@ const getContacts = async (req, res) => {
     }
 };
 
+// Function to get the contacts from the contact Group
 const getContactsById = async (req, res) => {
     const {id} = req.params;
     const {type = 'all', page = 1, limit = 10} = req.query;
@@ -154,6 +158,7 @@ const getContactsById = async (req, res) => {
     }
 };
 
+// Function to delete the whole contact group 
 const deleteGroupContact = async (req, res) => {
     try {
         const {id, userId} = req.params;

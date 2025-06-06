@@ -1,7 +1,7 @@
 const express = require('express');
 const sendBulkMsg = require('../controllers/SendBulkMsg');
 const handleCsv = require('../controllers/HandleCsv');
-const {CreateCampaign, deleteCampaign} = require('../controllers/CreateCampaign');
+const {CreateCampaign, deleteCampaign} = require('../controllers/createCampaign');
 const {AddContactGroup, getContacts, getContactsById, deleteGroupContact} = require('../controllers/AddContacts');
 const {getCampaignStats, getAllCampaignStats} = require('../controllers/getCampaignStats');
 const getCampaignById = require('../controllers/GetCampaignById');

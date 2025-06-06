@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaign');
 
+// Get all campaign overview details with pagination proving only 10 campaign per req 
 const getCampaignStats = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -16,7 +17,7 @@ const getCampaignStats = async (req, res) => {
         const userId = new mongoose.Types.ObjectId(req.body.userId);
         console.log("getCampaignStats userId:", userId);
 
-        const matchStage = { userId };
+        const matchStage = {userId};
 
         if (fromDate || toDate) {
             matchStage.sentAt = {};
@@ -25,7 +26,7 @@ const getCampaignStats = async (req, res) => {
         }
 
         const campaigns = await Campaign.aggregate([
-            { $match: matchStage },
+            {$match: matchStage},
             {
                 $addFields: {
                     sent: {
@@ -33,7 +34,7 @@ const getCampaignStats = async (req, res) => {
                             $filter: {
                                 input: "$logs",
                                 as: "log",
-                                cond: { $eq: ["$$log.status", "success"] }
+                                cond: {$eq: ["$$log.status", "success"]}
                             }
                         }
                     },
@@ -42,15 +43,15 @@ const getCampaignStats = async (req, res) => {
                             $filter: {
                                 input: "$logs",
                                 as: "log",
-                                cond: { $eq: ["$$log.status", "failed"] }
+                                cond: {$eq: ["$$log.status", "failed"]}
                             }
                         }
                     }
                 }
             },
-            { $sort: { [sortBy]: order } },
-            { $skip: skip },
-            { $limit: limit },
+            {$sort: {[sortBy]: order}},
+            {$skip: skip},
+            {$limit: limit},
             {
                 $project: {
                     campaignName: 1,
@@ -64,17 +65,17 @@ const getCampaignStats = async (req, res) => {
         const totalCount = await Campaign.countDocuments(matchStage);
 
         const totalSentAgg = await Campaign.aggregate([
-            { $match: matchStage },
-            { $unwind: "$logs" },
-            { $match: { "logs.status": "success" } },
-            { $count: "totalSent" }
+            {$match: matchStage},
+            {$unwind: "$logs"},
+            {$match: {"logs.status": "success"}},
+            {$count: "totalSent"}
         ]);
 
         const totalFailedAgg = await Campaign.aggregate([
-            { $match: matchStage },
-            { $unwind: "$logs" },
-            { $match: { "logs.status": "failed" } },
-            { $count: "totalFailed" }
+            {$match: matchStage},
+            {$unwind: "$logs"},
+            {$match: {"logs.status": "failed"}},
+            {$count: "totalFailed"}
         ]);
 
         res.json({
@@ -93,10 +94,11 @@ const getCampaignStats = async (req, res) => {
 
     } catch (err) {
         console.error("❌ Error fetching campaign stats:", err);
-        res.status(500).json({ error: "Failed to fetch campaign statistics" });
+        res.status(500).json({error: "Failed to fetch campaign statistics"});
     }
 };
 
+// Get the campaign overview details without pagination for dashboard overview
 const getAllCampaignStats = async (req, res) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.body.userId);
@@ -106,17 +108,17 @@ const getAllCampaignStats = async (req, res) => {
             {
                 $match: {
                     userId,
-                    sentAt: { $ne: null }
+                    sentAt: {$ne: null}
                 }
             },
-            { $unwind: "$logs" },
+            {$unwind: "$logs"},
             {
                 $group: {
                     _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$sentAt" } },
+                        date: {$dateToString: {format: "%Y-%m-%d", date: "$sentAt"}},
                         status: "$logs.status"
                     },
-                    count: { $sum: 1 }
+                    count: {$sum: 1}
                 }
             },
             {
@@ -124,12 +126,12 @@ const getAllCampaignStats = async (req, res) => {
                     _id: "$_id.date",
                     sent: {
                         $sum: {
-                            $cond: [{ $eq: ["$_id.status", "success"] }, "$count", 0]
+                            $cond: [{$eq: ["$_id.status", "success"]}, "$count", 0]
                         }
                     },
                     failed: {
                         $sum: {
-                            $cond: [{ $eq: ["$_id.status", "failed"] }, "$count", 0]
+                            $cond: [{$eq: ["$_id.status", "failed"]}, "$count", 0]
                         }
                     }
                 }
@@ -142,14 +144,14 @@ const getAllCampaignStats = async (req, res) => {
                     failed: 1
                 }
             },
-            { $sort: { date: 1 } }
+            {$sort: {date: 1}}
         ]);
 
         res.status(200).json(stats);
     } catch (err) {
         console.error("❌ Error generating campaign stats:", err);
-        res.status(500).json({ message: "Server error", error: err });
+        res.status(500).json({message: "Server error", error: err});
     }
 };
 
-module.exports = { getCampaignStats, getAllCampaignStats };
+module.exports = {getCampaignStats, getAllCampaignStats};

@@ -1,6 +1,6 @@
-// server/controllers/whatsappChatsController.js
 const {sessions} = require('./startController');
 
+// This function is responsible for the chat history of a contact connected wa
 const fetchChatHistory = async (req, res) => {
     try {
         const {userId, contactNumber} = req.body;
@@ -12,10 +12,8 @@ const fetchChatHistory = async (req, res) => {
             });
         }
 
-        // Convert to string and ensure consistent format
         const formattedNumber = contactNumber.toString().replace(/\D/g, '');
 
-        // Check if user has an active session
         if (!sessions.has(userId.toString())) {
             return res.status(400).json({
                 success: false,
@@ -78,9 +76,7 @@ const fetchChatHistory = async (req, res) => {
     }
 };
 
-/**
- * Fetch all chats/contacts for a user
- */
+// This function will fetch all the contacts from client wa
 const fetchAllContacts = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -143,9 +139,7 @@ const fetchAllContacts = async (req, res) => {
     }
 };
 
-/**
- * Send a message to a specific contact
- */
+// This will send the message through frontend
 const sendMessage = async (req, res) => {
     try {
         const {userId, contactNumber, message} = req.body;
@@ -201,9 +195,7 @@ const sendMessage = async (req, res) => {
     }
 };
 
-/**
- * Mark chat messages as read
- */
+// This will send the mark as read to chat wa
 const markAsRead = async (req, res) => {
     try {
         const {userId, contactNumber} = req.body;
@@ -262,7 +254,6 @@ const markAsRead = async (req, res) => {
     }
 };
 
-// Add this to the module.exports
 module.exports = {
     fetchChatHistory,
     fetchAllContacts,

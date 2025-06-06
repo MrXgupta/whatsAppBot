@@ -3,6 +3,7 @@ const ChatbotKeywordGroup = require('../models/ChatbotKeywordGroup');
 const ChatbotConversation = require('../models/ChatbotConversation');
 const {loadChatbotData} = require("./chatbotController");
 
+// Saving the chat bot rules per user
 exports.saveChatbotRule = async (req, res) => {
     try {
         const {userId, keyword, matchType = 'exact', response, parent, group} = req.body;
@@ -27,6 +28,7 @@ exports.saveChatbotRule = async (req, res) => {
     }
 };
 
+// Getting the all chatbot rules per user
 exports.getAllChatbotRules = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -44,6 +46,7 @@ exports.getAllChatbotRules = async (req, res) => {
     }
 };
 
+// Saving the group of keywords for single res per user
 exports.saveKeywordGroup = async (req, res) => {
     try {
         const {userId, groupName, keywords} = req.body;
@@ -59,6 +62,7 @@ exports.saveKeywordGroup = async (req, res) => {
     }
 };
 
+// getting the all chatbot keywords group per user
 exports.getAllKeywordGroups = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -73,6 +77,7 @@ exports.getAllKeywordGroups = async (req, res) => {
     }
 };
 
+// ChatBot conversation basically tells what was the msg and what res triggered
 exports.getConversation = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -101,6 +106,7 @@ exports.getConversation = async (req, res) => {
     }
 };
 
+// get all the stats of chatbot like how many replies till now success count or failed count
 exports.getBotReplyStats = async (req, res) => {
     try {
         const {userId} = req.body;
@@ -136,3 +142,4 @@ exports.getBotReplyStats = async (req, res) => {
         res.status(500).json({success: false, message: 'Internal server error'});
     }
 };
+
