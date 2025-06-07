@@ -66,7 +66,7 @@ function _resetTimeout(userId) {
     }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
 }
 
-// main function to connect the client check if the session is available or not or create a new session
+// main function to connect the client, check if the session is available or not or create a new session
 async function initOrGetSession(userId, io) {
     userId = userId.toString();
     console.log(`🟢 Initializing or getting session for user ${userId}`);
