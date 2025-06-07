@@ -47,7 +47,7 @@ const SendBulkMsg = (io) => {
                 return res.status(404).json({error: 'No contacts found in the selected group.'});
             }
 
-            const validNumbers = group.numbers.filter(isValidPhoneNumber);
+            const validNumbers = group.validNumbers || [];
 
             if (validNumbers.length === 0) {
                 return res.status(400).json({error: 'No valid phone numbers to send messages.'});

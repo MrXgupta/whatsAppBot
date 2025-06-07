@@ -1,17 +1,6 @@
 import {Link, useLocation, useNavigate} from "react-router-dom";
-import {useSelector, useDispatch} from "react-redux";
-import {
-    LayoutDashboard,
-    Layers,
-    Users,
-    UserCircle,
-    MoreHorizontal,
-    Bot,
-    MessageSquareQuote,
-    LogOut,
-    LogIn,
-MessageCircleMore,
-} from "lucide-react";
+import {useDispatch, useSelector} from "react-redux";
+import {Bot, Layers, LayoutDashboard, LogIn, LogOut, MessageCircleMore, MessageSquareQuote, Users,} from "lucide-react";
 import logo from "../../public/logo.svg";
 import useClientInfo from "./Profile/userClientInfo.js";
 import {logoutUser} from "../slices/userSlice";
@@ -39,7 +28,7 @@ const NavBar = () => {
 
     return (
         <aside
-            className="group w-20 hover:w-64 transition-all duration-300 bg-white shadow-md p-4 flex flex-col gap-6 overflow-hidden min-h-screen">
+            className="group w-20 hover:w-64 transition-all duration-300 bg-white shadow-md p-4 flex flex-col gap-6 overflow-hidden min-h-screen h-full">
             <div className="flex items-center justify-between">
                 <img
                     src={clientInfo?.profilePicUrl || logo}
@@ -91,7 +80,7 @@ const NavBar = () => {
                     {/*<MoreHorizontal className="w-5 h-5"/>*/}
                     <div
                         className={`ml-3 whitespace-nowrap overflow-hidden opacity-0 group-hover:opacity-100 transition-all duration-300 }`}>
-                    {user.name} <br/> {user.email}
+                        {user.name} <br/> {user.email}
                     </div>
                 </div>
 

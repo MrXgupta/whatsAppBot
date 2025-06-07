@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbotController');
 
-const SESSION_TIMEOUT_MINUTES = 30;
+const SESSION_TIMEOUT_MINUTES = 300;
 const sessions = new Map();
 
 // checking if the session is active or not
@@ -86,7 +86,7 @@ async function initOrGetSession(userId, io) {
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            executablePath: '/usr/bin/chromium-browser',
+            executablePath: '/usr/bin/chromium',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         }
     });

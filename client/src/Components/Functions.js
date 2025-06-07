@@ -1,18 +1,22 @@
-import {
-    setNumbers, addNumber, setLogs,
-} from '../slices/appSlice';
 import Swal from 'sweetalert2';
 import axios from "axios";
-import {useSelector} from "react-redux";
 
-export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
+export const handleFileUpload = (e, setPreview, setFilePath) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
         const lines = event.target.result.split(/\r\n|\n/).filter(Boolean);
-        const preview = lines.slice(0, 100).map(num => ({ number: num.trim(), status: '' }));
+        const headers = lines[0].split(',');
+
+        const preview = lines.slice(1, 101).map(line => {
+            const cols = line.split(',');
+            return {
+                number: cols[0]?.trim(),
+                status: ''
+            };
+        });
         setPreview(preview);
 
         const formData = new FormData();
@@ -35,7 +39,6 @@ export const handleFileUpload = (e, dispatch, setPreview, setFilePath) => {
     };
     reader.readAsText(file);
 };
-
 
 
 // export const handleAddNumber = (e, dispatch, numbers) => {
@@ -69,7 +72,7 @@ export const handleSend = async ({
 
     console.log(user)
     if (!campaignName.trim() || !selectedContactGroup || !message.trim()) {
-        return Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.' });
+        return Swal.fire({icon: 'error', title: 'Missing Fields', text: 'Please fill all campaign details.'});
     }
 
     const formData = new FormData();
@@ -89,13 +92,13 @@ export const handleSend = async ({
     setSending(true);
 
     try {
-        const { data } = await axios.post(
+        const {data} = await axios.post(
             `${import.meta.env.VITE_BASE_URL}/send`,
             formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } }
+            {headers: {'Content-Type': 'multipart/form-data'}}
         );
 
-        const { total } = data;
+        const {total} = data;
         const avgDelay = (parseInt(minDelay) + parseInt(maxDelay)) / 2;
         const estimatedSeconds = Math.ceil(total * avgDelay);
         const minutes = Math.floor(estimatedSeconds / 60);
@@ -111,7 +114,7 @@ export const handleSend = async ({
         });
     } catch (err) {
         console.error(err);
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send campaign messages.' });
+        Swal.fire({icon: 'error', title: 'Error', text: 'Failed to send campaign messages.'});
     } finally {
         setSending(false);
     }

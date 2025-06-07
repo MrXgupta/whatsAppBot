@@ -1,7 +1,5 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { setMessage } from "../../slices/appSlice.js";
-import { handleSend } from "../Functions.js";
+import {handleSend} from "../Functions.js";
 
 const CampaignForm = ({
                           campaignName,
@@ -19,7 +17,7 @@ const CampaignForm = ({
                           sending,
                           setSending,
                           setMessageValue,
-    user,
+                          user,
                       }) => {
 
     return (
@@ -46,7 +44,7 @@ const CampaignForm = ({
                         <option value="">-- Select Campaign Contacts --</option>
                         {groups.map((g) => (
                             <option key={g._id} value={g._id}>
-                                {g.groupName} ({g.numbers.length} contacts)
+                                {g.groupName} ({g.validCount} contacts)
                             </option>
                         ))}
                     </select>
@@ -65,9 +63,12 @@ const CampaignForm = ({
 
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Attach Image</label>
-                    <label className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded cursor-pointer hover:bg-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 01-2.828 0L3 11.828m0 0a4 4 0 015.656-5.656l1.414 1.414L17 3" />
+                    <label
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded cursor-pointer hover:bg-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M15.172 7l-6.586 6.586a2 2 0 01-2.828 0L3 11.828m0 0a4 4 0 015.656-5.656l1.414 1.414L17 3"/>
                         </svg>
                         Choose Image
                         <input

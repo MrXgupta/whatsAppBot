@@ -20,6 +20,7 @@ const Contacts = () => {
     const [filePath, setFilePath] = useState('');
     const [fetch, setFetch] = useState(false)
     const user = useSelector(state => state.user);
+
     const handleSaveContacts = async () => {
         if (!groupName.trim()) {
             return Swal.fire({icon: 'error', title: 'Missing Group Name', text: 'Please provide a group name.'});
@@ -62,7 +63,7 @@ const Contacts = () => {
     const fetchGroups = async () => {
         setLoading(false);
         try {
-            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContacts` , {
+            const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContacts`, {
                 userId: user._id,
             });
             setGroups(data.groups || []);
@@ -90,114 +91,120 @@ const Contacts = () => {
     return (
         <>
             {loading ? (
-                <div className="p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">📇 Contact Groups</h1>
-                        <button
-                            onClick={() => setShowForm(!showForm)}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-                        >
-                            {showForm ? "Cancel" : "➕ Add Contact Group"}
-                        </button>
-                    </div>
-
-                    {showForm && (
-                        <div className="bg-white shadow-md rounded p-6 mb-6">
-
-                            <div className="m-4 border-l-4 border-gray-400 pl-4 text-sm mt-6">
-                                <p className="text-sm text-gray-600 mb-2">
-                                    📌 <strong>Number Format Rules:</strong><br/>
-                                    • Each number must be 12 digits starting with country
-                                    code <code>91</code> (e.g. <code>919876543210</code>).<br/>
-                                    • Only numeric values are allowed — no spaces, dashes, or text.<br/>
-                                    • File should contain a single column titled <code>number</code>.<br/>
-                                </p>
-
-                                <a
-                                    href="../../public/example.csv"
-                                    download
-                                    className="text-blue-600 hover:underline text-sm"
-                                >
-                                    ⬇️ Download sample CSV template
-                                </a>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block mb-1 text-sm font-medium text-gray-600">Group Name</label>
-                                <input
-                                    type="text"
-                                    value={groupName}
-                                    onChange={(e) => setGroupName(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded"
-                                    placeholder="E.g. Holiday Clients"
-                                />
-                            </div>
-
-                            <div className="mb-6">
-                                <input
-                                    ref={fileRef}
-                                    type="file"
-                                    accept=".csv"
-                                    className="block w-full mb-2 text-sm text-gray-600"
-                                    onChange={(e) => handleFileUpload(e, dispatch, setPreviewNumbers, setFilePath)}
-                                />
-                                <p className="text-sm text-gray-500">Upload a CSV file with a column
-                                    named <code>number</code>.</p>
-                            </div>
-
-                            <PreviewTable numbers={previewNumbers}/>
-
+                    <div className="p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-2xl font-bold">📇 Contact Groups</h1>
                             <button
-                                onClick={handleSaveContacts}
-                                className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                                onClick={() => setShowForm(!showForm)}
+                                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
                             >
-                                Save Group
+                                {showForm ? "Cancel" : "➕ Add Contact Group"}
                             </button>
-
                         </div>
-                    )}
 
-                    <div>
-                        <h2 className="text-xl font-semibold mb-3 text-gray-800">📁 Your Contact Groups</h2>
-                        <table className="w-full text-sm mt-4">
-                            <thead>
-                            <tr className="bg-gray-100 text-left">
-                                <th className="p-2">Group</th>
-                                <th className="p-2">Valid</th>
-                                <th className="p-2">Invalid</th>
-                                <th className="p-2">Duplicate (Removed)</th>
-                                <th className="p-2">Status</th>
-                                <th className="p-2">Date</th>
-                                <th className="p-2">Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {groups.map((g) => (
-                                <tr key={g._id} className="border-b">
-                                    <td className="p-2 font-semibold">{g.groupName}</td>
-                                    <td className="p-2 text-green-600">{g.validNumbers.length}</td>
-                                    <td className="p-2 text-red-500">{g.invalidNumbers.length}</td>
-                                    <td className="p-2 text-red-500">{g.duplicatesRemoved}</td>
-                                    <td className="p-2">{g.validationStatus}</td>
-                                    <td className="p-2">{new Date(g.addedAt).toLocaleString()}</td>
-                                    <td>
-                                        <button className="bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700"
-                                                onClick={() => navigate(`/contacts/${g._id}`)}
-                                        >
-                                            View
-                                        </button>
-                                        <button className="bg-red-600 text-white p-2 rounded hover:bg-red-700 ml-2"
-                                        onClick={()=>handleDelete(g._id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
+                        {showForm && (
+                            <div className="bg-white shadow-md rounded p-6 mb-6">
+
+                                <div className="m-4 border-l-4 border-gray-400 pl-4 text-sm mt-6">
+                                    <p className="text-sm text-gray-600 mb-2">
+                                        📌 <strong>Number Format Rules:</strong><br/>
+                                        • Each number must be 12 digits starting with country
+                                        code <code>91</code> (e.g. <code>919876543210</code>).<br/>
+                                        • Only numeric values are allowed — no spaces, dashes, or text.<br/>
+                                        • File should contain a single column titled <code>number</code>.<br/>
+                                    </p>
+
+                                    <a
+                                        href="../../public/example.csv"
+                                        download
+                                        className="text-blue-600 hover:underline text-sm"
+                                    >
+                                        ⬇️ Download sample CSV template
+                                    </a>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block mb-1 text-sm font-medium text-gray-600">Group Name</label>
+                                    <input
+                                        type="text"
+                                        value={groupName}
+                                        onChange={(e) => setGroupName(e.target.value)}
+                                        className="w-full px-3 py-2 border rounded"
+                                        placeholder="E.g. Holiday Clients"
+                                    />
+                                </div>
+
+                                <div className="mb-6">
+                                    <input
+                                        ref={fileRef}
+                                        type="file"
+                                        accept=".csv"
+                                        className="block w-full mb-2 text-sm text-gray-600"
+                                        onChange={(e) => handleFileUpload(e, setPreviewNumbers, setFilePath)}
+                                    />
+                                    <p className="text-sm text-gray-500">Upload a CSV file with a column
+                                        named <code>number</code>.</p>
+                                </div>
+
+                                <PreviewTable numbers={previewNumbers}/>
+
+                                <button
+                                    onClick={handleSaveContacts}
+                                    className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                                >
+                                    Save Group
+                                </button>
+
+                            </div>
+                        )}
+
+                        <div>
+                            <h2 className="text-xl font-semibold mb-3 text-gray-800">📁 Your Contact Groups</h2>
+                            <table className="w-full text-sm mt-4">
+                                <thead>
+                                <tr className="bg-gray-100 text-left">
+                                    <th className="p-2">Group</th>
+                                    <th className="p-2">Valid</th>
+                                    <th className="p-2">Invalid</th>
+                                    <th className="p-2">Duplicate (Removed)</th>
+                                    <th className="p-2">Status</th>
+                                    <th className="p-2">Date</th>
+                                    <th className="p-2">Action</th>
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {groups.map((g) => (
+                                    <tr key={g._id} className="border-b hover:bg-gray-100">
+                                        <td className="p-2 font-semibold">{g.groupName}</td>
+                                        <td className="p-2 text-green-600">{g.validCount}</td>
+                                        <td className="p-2 text-red-500">{g.invalidCount}</td>
+                                        <td className="p-2 text-red-500">{g.duplicatesRemoved}</td>
+                                        <td className="p-2">{g.validationStatus}</td>
+                                        <td className="p-2">{new Date(g.addedAt).toLocaleString()}</td>
+                                        <td>
+                                            <button className="bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700"
+                                                    onClick={() => navigate(`/contacts/${g._id}`)}
+                                            >
+                                                View
+                                            </button>
+                                            <button className="bg-red-600 text-white p-2 rounded hover:bg-red-700 ml-2"
+                                                    onClick={() => handleDelete(g._id)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>) :
+                (
+                    <div className="flex justify-center items-center h-screen w-screen">
+                        <Loader/>
                     </div>
-                </div>) : (<Loader/>)}
+                )
+            }
         </>
     );
 };

@@ -49,10 +49,11 @@ const Layout = () => {
     return (
         <>
             <div className="flex">
-                <nav className="bg-white shadow h-screen">
-                {!hideNavbar && <NavBar/>}
+                <nav className="bg-white min-h-screen max-h-[200vh]">
+                    {!hideNavbar && <NavBar/>}
                 </nav>
-                <div className={`flex-1 flex flex-col overflow-hidden border ${!hideNavbar ? "" : "ml-0"} min-h-screen`}>
+                <div
+                    className={`flex-1 flex flex-col overflow-hidden border ${!hideNavbar ? "" : "ml-0"} min-h-screen`}>
                     <Outlet/>
                 </div>
             </div>

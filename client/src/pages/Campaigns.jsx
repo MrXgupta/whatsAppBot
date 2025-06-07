@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import { handleSend } from "../Components/Functions.js";
+import {handleSend} from "../Components/Functions.js";
 import axios from "axios";
 import Loader from "../Components/Loader";
 import CampaignForm from "../Components/Campaign/CampaignForm.jsx";
@@ -27,7 +27,7 @@ const Campaigns = () => {
         const fetchGroups = async () => {
             setLoading(false);
             try {
-                const { data } = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContacts` , {
+                const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/getContactsSummary`, {
                     userId: user._id,
                 });
                 setGroups(data.groups || []);
@@ -74,14 +74,16 @@ const Campaigns = () => {
                         handleSend={handleSend}
                         user={user}
                     />
-                    <CampaignPreview mediaFile={mediaFile} message={message} />
+                    <CampaignPreview mediaFile={mediaFile} message={message}/>
                 </div>
             )}
 
-            <CampaignStats />
+            <CampaignStats/>
         </div>
     ) : (
-        <Loader />
+        <div className="flex justify-center items-center h-screen w-screen">
+            <Loader/>
+        </div>
     );
 };
 

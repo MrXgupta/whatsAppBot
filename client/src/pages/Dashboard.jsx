@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import io from 'socket.io-client';
 import Swal from 'sweetalert2';
-import {useSelector, useDispatch} from 'react-redux';
-import {updateStatus, updateLogs, setQr, setClientReady} from '../slices/appSlice.js';
+import {useDispatch, useSelector} from 'react-redux';
+import {setClientReady, setQr, updateLogs, updateStatus} from '../slices/appSlice.js';
 import axios from 'axios';
 import LinkedAccount from '../Components/Profile/LinkedAccount.jsx';
 import Charts from '../Components/Dashboard/Charts.jsx';
@@ -127,7 +127,7 @@ const Dashboard = () => {
                                     <div className="w-full bg-gray-200 h-2 mt-2 rounded">
                                         <div
                                             className="bg-green-500 h-2 rounded"
-                                            style={{ width: `${(totalSent + totalFailed) / 50000 * 100}%` }}
+                                            style={{width: `${(totalSent + totalFailed) / 50000 * 100}%`}}
                                         ></div>
                                     </div>
                                 </div>
@@ -143,16 +143,15 @@ const Dashboard = () => {
 
                             {/* Bottom Pie chart (Left) */}
                             <div className="bg-white shadow rounded-2xl p-4">
-                            <Pie progress={progress} />
+                                <Pie progress={progress}/>
                             </div>
                         </div>
 
                         {/* Right-side Large Pie chart */}
                         <div className="bg-white shadow rounded-2xl p-4 h-full flex items-center justify-center">
-                                <SuccessRatePie totalSent={totalSent} totalFailed={totalFailed} loading={loading} />
+                            <SuccessRatePie totalSent={totalSent} totalFailed={totalFailed} loading={loading}/>
                         </div>
                     </div>
-
 
 
                     <div className="dashboard-charts">
@@ -161,7 +160,8 @@ const Dashboard = () => {
                     </div>
 
                     <div className="dashboard-overview">
-                        <Overview botStats={botStats} totalSent={totalSent} totalFailed={totalFailed} loading={loading}/>
+                        <Overview botStats={botStats} totalSent={totalSent} totalFailed={totalFailed}
+                                  loading={loading}/>
                     </div>
 
                     <div className="dashboard-campaigns">
@@ -173,7 +173,9 @@ const Dashboard = () => {
                     </div>
                 </div>
             ) : (
-                <Loader/>
+                <div className="flex justify-center items-center h-screen w-screen">
+                    <Loader/>
+                </div>
             )}
         </>
     );
