@@ -13,6 +13,14 @@ import {AlertCircle, CheckCircle, RefreshCw, Smartphone, Wifi, WifiOff} from "lu
 const socket = io(`${import.meta.env.VITE_BASE_URL}`);
 console.log(socket);
 
+socket.on("connect", () => {
+    console.log("Connected to socket");
+})
+
+socket.on("disconnect", () => {
+    console.log("Disconnected from socket");
+})
+
 const Profile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
