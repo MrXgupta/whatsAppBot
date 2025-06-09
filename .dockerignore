@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.wwebjs_auth
+.env
+server/.wwebjs_auth
+server/.wwebjs_cache
+server/.env
+client/.env
+client/node_modules
+server/node_modules

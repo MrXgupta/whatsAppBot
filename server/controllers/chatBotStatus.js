@@ -1,6 +1,6 @@
-const sessionManager = require('../Backup/whatsapp/sessionManager');
+const sessionManager = require('../controllers/startController');
 
-// this is to pause or resume the bot
+// ✅ Pause/Resume Bot for a specific user
 exports.setBotStatus = (req, res) => {
     const {isActive, userId} = req.body;
     const session = sessionManager.getClient(userId);
@@ -9,11 +9,20 @@ exports.setBotStatus = (req, res) => {
         return res.status(404).json({error: 'Session not found'});
     }
 
-    isActive ? session.resumeBot() : session.pauseBot();
+    if (typeof session.pauseBot !== 'function' || typeof session.resumeBot !== 'function') {
+        return res.status(500).json({error: 'Bot control functions not available on session'});
+    }
+
+    if (isActive) {
+        session.resumeBot();
+    } else {
+        session.pauseBot();
+    }
+
     return res.json({isActive, status: isActive ? 'resumed' : 'paused'});
 };
 
-// this is to get to know if the bot is paused ornot
+// ✅ Get Bot Status
 exports.getBotStatus = (req, res) => {
     const {userId} = req.query;
     const session = sessionManager.getClient(userId);
@@ -22,5 +31,6 @@ exports.getBotStatus = (req, res) => {
         return res.status(404).json({error: 'Session not found'});
     }
 
-    res.json({isActive: !session.isBotPaused()});
+    const isActive = !session.isBotPaused?.();
+    res.json({isActive});
 };

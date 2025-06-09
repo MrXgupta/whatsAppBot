@@ -19,20 +19,23 @@ const resolveKeyword = (ruleKeyword, keywordGroups) => {
 }
 
 // This function is responsible to send messages to contacts, it will receive and send res automatically
-const handleIncomingMessage = async (userId, message) => {
-    console.log("Chatbot Connected for", userId)
+const handleIncomingMessage = async (client, userId, message) => {
+    console.log("Chatbot Connected for", userId);
 
+    // Ignore groups, broadcasts, status, or invalid chats
     if (
         message.from.includes('g.us') ||
         message.from.includes('broadcast') ||
         message.from.includes('status') ||
-        message.from.includes('c.us') === false
+        !message.from.includes('c.us')
     ) {
         return;
     }
+
+    // Load chatbot data into memory cache if not already
     if (!cache.has(userId)) await loadChatbotData(userId);
 
-    console.log(`Message from ${message.from}: ${message.body}`)
+    console.log(`Message from ${message.from}: ${message.body}`);
 
     const {rules: chatbotRules, keywordGroups} = cache.get(userId);
     const from = message.from;
@@ -52,28 +55,46 @@ const handleIncomingMessage = async (userId, message) => {
         return null;
     };
 
+    // Check for child rules if there's a previous context
     if (lastRuleId) {
         const childRules = chatbotRules.filter(r => r.parentRuleId?.toString() === lastRuleId.toString());
         matchedRule = matchRules(childRules);
     }
 
+    // Otherwise, check root rules
     if (!matchedRule) {
         const rootRules = chatbotRules.filter(r => !r.parentRuleId);
         matchedRule = matchRules(rootRules);
     }
 
+    // If a rule matched, send the response and update context
     if (matchedRule) {
-        await message.reply(matchedRule.response);
+        try {
+            // Use client.sendMessage directly (safer than reply)
+            await client.sendMessage(from, matchedRule.response);
+        } catch (err) {
+            console.warn("❌ Failed to send message:", err.message);
+        }
+
         userMap.set(from, matchedRule._id);
         userContextMap.set(userId, userMap);
 
+        // Log the interaction in database
         await ChatbotConversation.findOneAndUpdate(
             {number: from.split('@')[0], userId},
-            {$push: {chats: {query: incomingText, response: matchedRule.response, timestamp: new Date()}}},
+            {
+                $push: {
+                    chats: {
+                        query: incomingText,
+                        response: matchedRule.response,
+                        timestamp: new Date()
+                    }
+                }
+            },
             {upsert: true, new: true}
         );
     }
-}
+};
 
 module.exports = {
     handleIncomingMessage,

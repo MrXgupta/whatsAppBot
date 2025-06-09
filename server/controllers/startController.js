@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbotController');
 
-const SESSION_TIMEOUT_MINUTES = 300;
+const SESSION_TIMEOUT_MINUTES = 3000;
 const sessions = new Map();
 
 // checking if the session is active or not
@@ -86,7 +86,7 @@ async function initOrGetSession(userId, io) {
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            // executablePath: '/usr/bin/chromium',
+            executablePath: '/usr/bin/chromium',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
         }
     });
@@ -98,7 +98,16 @@ async function initOrGetSession(userId, io) {
         qr: null,
         timeoutId: null,
         io,
+        botPaused: false,
+        pauseBot: () => {
+            session.botPaused = true;
+        },
+        resumeBot: () => {
+            session.botPaused = false;
+        },
+        isBotPaused: () => session.botPaused,
     };
+
 
     sessions.set(userId, session);
 
@@ -132,7 +141,13 @@ async function initOrGetSession(userId, io) {
 
     client.on('message', async (message) => {
         if (session.status !== 'ready') return;
-        await handleIncomingMessage(userId, message);
+
+        if (session.isBotPaused()) {
+            console.log(`🤖 Bot is paused for user ${userId}, message ignored.`);
+            return;
+        }
+
+        await handleIncomingMessage(client, userId, message);
 
         if (!message.fromMe) {
             session.io?.to(userId).emit('new-message', {
