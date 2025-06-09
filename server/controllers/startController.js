@@ -2,225 +2,831 @@ const qrcode = require('qrcode-terminal');
 const {Client, LocalAuth} = require('whatsapp-web.js');
 const WhatsappSession = require('../models/WhatsappSession');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbotController');
 
-const SESSION_TIMEOUT_MINUTES = 3000;
+// Configuration
+const SESSION_TIMEOUT_MINUTES = 12 * 60; // 12 hours - much longer for campaigns
+const IDLE_SESSION_TIMEOUT_MINUTES = 30; // 30 minutes for truly idle sessions
+const QR_TIMEOUT_MS = 120000; // 2 minutes QR timeout
+const MAX_RETRY_ATTEMPTS = 3;
+const CLEANUP_DELAY_MS = 5000;
+const MAX_CONCURRENT_SESSIONS = 20; // Increased for campaign usage
+const CAMPAIGN_ACTIVITY_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+const MAINTENANCE_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+
+// Global state
 const sessions = new Map();
+const initializingUsers = new Set();
+const qrTimeouts = new Map();
+const retryAttempts = new Map();
+const campaignActivity = new Map(); // Track campaign activity per user
+const sessionMetrics = new Map(); // Track session usage metrics
 
-// checking if the session is active or not
-function _isSessionActive(session) {
-    if (!session) return false;
-    if (session.status !== 'ready' && session.status !== 'pending') return false;
-    const inactiveMs = Date.now() - session.lastActive;
-    return inactiveMs <= SESSION_TIMEOUT_MINUTES * 60 * 1000;
-}
+// Initialize cleanup processes
+let maintenanceInterval;
 
-// destroy the session and del the session dir from .wwebjs_auth too
-async function _destroySession(userId) {
+// Campaign activity tracking
+function markCampaignActivity(userId, activityType = 'message') {
     userId = userId.toString();
+    const now = Date.now();
 
-    if (!sessions.has(userId)) return;
-
-    const session = sessions.get(userId);
-    clearTimeout(session.timeoutId);
-
-    try {
-        await session.client.destroy();
-    } catch (e) {
-        console.warn(`Failed to destroy client for ${userId}`, e.message);
+    if (!campaignActivity.has(userId)) {
+        campaignActivity.set(userId, {
+            lastActivity: now,
+            messageCount: 0,
+            campaignStarted: now,
+            activityTypes: new Set()
+        });
     }
 
-    sessions.delete(userId);
-    await WhatsappSession.deleteOne({userId});
+    const activity = campaignActivity.get(userId);
+    activity.lastActivity = now;
+    activity.activityTypes.add(activityType);
 
-    setTimeout(() => {
-        try {
-            const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
-            const authPath = path.join('./.wwebjs_auth', `session-${clientId}`);
-            fs.rm(authPath, {recursive: true, force: true}, (err) => {
-                if (err) {
-                    console.error(`Failed to delete auth folder for ${userId}:`, err.message);
-                } else {
-                    console.log(`Auth folder for user ${userId} deleted.`);
-                }
-            });
-        } catch (e) {
-            console.error(`Error deleting auth folder for ${userId}:`, e.message);
-        }
-    }, 3000); // wait 3 seconds
+    if (activityType === 'message_sent') {
+        activity.messageCount++;
+    }
 
-    console.log(`Session for user ${userId} destroyed and DB entry deleted.`);
+    console.log(`📊 Campaign activity for ${userId}: ${activity.messageCount} messages, last: ${activityType}`);
 }
 
-// reset time and if time out then destroy the session
+// Check if user is running an active campaign
+function isUserRunningCampaign(userId) {
+    userId = userId.toString();
+    const activity = campaignActivity.get(userId);
+
+    if (!activity) return false;
+
+    const timeSinceLastActivity = Date.now() - activity.lastActivity;
+    const isRecentActivity = timeSinceLastActivity < CAMPAIGN_ACTIVITY_THRESHOLD_MS;
+    const hasSignificantMessages = activity.messageCount > 5; // More than 5 messages suggests campaign
+
+    // Consider it a campaign if there's recent activity and significant message volume
+    const isCampaignActive = isRecentActivity && hasSignificantMessages;
+
+    if (isCampaignActive) {
+        console.log(`🎯 Campaign detected for ${userId}: ${activity.messageCount} messages, ${Math.round(timeSinceLastActivity / 1000)}s ago`);
+    }
+
+    return isCampaignActive;
+}
+
+// Enhanced session activity check
+function _isSessionActive(session) {
+    if (!session) return false;
+    if (!['ready', 'pending'].includes(session.status)) return false;
+
+    const userId = session.userId;
+    const inactiveMs = Date.now() - session.lastActive;
+
+    // If user is running a campaign, use extended timeout
+    if (isUserRunningCampaign(userId)) {
+        console.log(`🎯 Campaign active for ${userId}, using extended timeout`);
+        return inactiveMs <= SESSION_TIMEOUT_MINUTES * 60 * 1000;
+    }
+
+    // For idle sessions, use shorter timeout
+    const isWithinIdleTimeout = inactiveMs <= IDLE_SESSION_TIMEOUT_MINUTES * 60 * 1000;
+
+    // Additional client health check for ready sessions
+    if (session.client && session.status === 'ready') {
+        try {
+            const clientState = session.client.getState();
+            return isWithinIdleTimeout && clientState !== 'CONFLICT';
+        } catch (error) {
+            console.warn(`⚠️ Client health check failed for ${userId}: ${error.message}`);
+            return false;
+        }
+    }
+
+    return isWithinIdleTimeout;
+}
+
+// Enhanced session destruction with campaign protection
+async function _destroySession(userId, reason = 'manual', force = false) {
+    userId = userId.toString();
+
+    // Protect active campaigns unless forced
+    if (!force && isUserRunningCampaign(userId)) {
+        console.log(`🛡️ Protecting active campaign for ${userId} from destruction (reason: ${reason})`);
+        // Extend the session timeout instead
+        const session = sessions.get(userId);
+        if (session) {
+            _resetTimeout(userId);
+            return false; // Indicate session was not destroyed
+        }
+    }
+
+    console.log(`🔴 Destroying session for user ${userId} - Reason: ${reason}`);
+
+    // Cleanup tracking
+    initializingUsers.delete(userId);
+    _clearQrTimeout(userId);
+
+    if (!sessions.has(userId)) {
+        console.log(`⚠️ No session found for user ${userId} to destroy`);
+        return true;
+    }
+
+    const session = sessions.get(userId);
+
+    // Clear session timeout
+    if (session.timeoutId) {
+        clearTimeout(session.timeoutId);
+    }
+
+    // Enhanced client destruction with multiple attempts
+    if (session.client) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                await Promise.race([
+                    session.client.destroy(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
+                ]);
+                console.log(`✅ Client destroyed successfully for user ${userId}`);
+                break;
+            } catch (error) {
+                console.warn(`⚠️ Attempt ${attempt} to destroy client for ${userId} failed:`, error.message);
+                if (attempt === 3) {
+                    console.error(`❌ Failed to destroy client for ${userId} after 3 attempts`);
+                    // Force kill the process if stuck
+                    try {
+                        if (session.client.pupPage) {
+                            await session.client.pupPage.close();
+                        }
+                        if (session.client.pupBrowser) {
+                            await session.client.pupBrowser.close();
+                        }
+                    } catch (e) {
+                        console.error(`❌ Force cleanup failed for ${userId}:`, e.message);
+                    }
+                }
+            }
+        }
+    }
+
+    // Remove from all tracking maps
+    sessions.delete(userId);
+    campaignActivity.delete(userId);
+    sessionMetrics.delete(userId);
+
+    // Emit disconnection event
+    if (session.io) {
+        session.io.to(userId).emit('session_destroyed', {
+            reason,
+            userId,
+            campaignProtected: !force && reason !== 'manual'
+        });
+    }
+
+    // Clean database
+    try {
+        await WhatsappSession.deleteOne({userId});
+        console.log(`🗑️ Database entry deleted for user ${userId}`);
+    } catch (error) {
+        console.error(`❌ Failed to delete DB entry for ${userId}:`, error.message);
+    }
+
+    // Clean auth folder with delay
+    setTimeout(async () => {
+        try {
+            await _cleanAuthFolder(userId);
+        } catch (error) {
+            console.error(`❌ Error cleaning auth folder for ${userId}:`, error.message);
+        }
+    }, CLEANUP_DELAY_MS);
+
+    retryAttempts.delete(userId);
+    console.log(`✅ Session cleanup completed for user ${userId}`);
+    return true;
+}
+
+// Clean authentication folder
+async function _cleanAuthFolder(userId) {
+    try {
+        const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
+        const authPath = path.join('./.wwebjs_auth', `session-${clientId}`);
+
+        await fs.rm(authPath, {recursive: true, force: true});
+        console.log(`🗑️ Auth folder deleted for user ${userId}`);
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            console.error(`❌ Failed to delete auth folder for ${userId}:`, error.message);
+        }
+    }
+}
+
+// Smart timeout management with campaign awareness
 function _resetTimeout(userId) {
     userId = userId.toString();
     const session = sessions.get(userId);
     if (!session) return;
 
-    if (session.timeoutId) clearTimeout(session.timeoutId);
-    session.timeoutId = setTimeout(() => {
-        _destroySession(userId);
-        console.log(`Session for user ${userId} timed out and destroyed.`);
-    }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
-}
-
-// main function to connect the client, check if the session is available or not or create a new session
-async function initOrGetSession(userId, io) {
-    userId = userId.toString();
-    console.log(`🟢 Initializing or getting session for user ${userId}`);
-
-    if (sessions.has(userId)) {
-        const session = sessions.get(userId);
-        session.io = io;
-        if (_isSessionActive(session)) {
-            console.log(`🟢 Session for user ${userId} already active`);
-            return {status: session.status};
-        }
-        await _destroySession(userId);
+    // Clear existing timeout
+    if (session.timeoutId) {
+        clearTimeout(session.timeoutId);
     }
 
+    // Update last active time
+    session.lastActive = Date.now();
+
+    // Determine timeout duration based on campaign activity
+    const timeoutDuration = isUserRunningCampaign(userId)
+        ? SESSION_TIMEOUT_MINUTES * 60 * 1000
+        : IDLE_SESSION_TIMEOUT_MINUTES * 60 * 1000;
+
+    // Set new timeout
+    session.timeoutId = setTimeout(async () => {
+        const timeoutType = isUserRunningCampaign(userId) ? 'campaign-timeout' : 'idle-timeout';
+        console.log(`⏰ Session ${timeoutType} reached for user ${userId}`);
+
+        // Double-check campaign status before destroying
+        if (isUserRunningCampaign(userId)) {
+            console.log(`🛡️ Campaign still active, extending timeout for ${userId}`);
+            _resetTimeout(userId); // Extend timeout
+        } else {
+            await _destroySession(userId, timeoutType);
+        }
+    }, timeoutDuration);
+
+    const timeoutMinutes = Math.round(timeoutDuration / (60 * 1000));
+    console.log(`⏰ Timeout set for ${userId}: ${timeoutMinutes} minutes`);
+}
+
+// QR timeout management
+function _setQrTimeout(userId) {
+    _clearQrTimeout(userId);
+
+    const timeoutId = setTimeout(async () => {
+        console.log(`⏰ QR timeout for user ${userId}`);
+        const session = sessions.get(userId);
+        if (session && session.status === 'pending') {
+            session.io?.to(userId).emit('qr_timeout', {
+                message: 'QR code expired, please try again',
+                userId,
+                canRetry: _getRetryAttempts(userId) < MAX_RETRY_ATTEMPTS
+            });
+            await _destroySession(userId, 'qr_timeout');
+        }
+    }, QR_TIMEOUT_MS);
+
+    qrTimeouts.set(userId, timeoutId);
+}
+
+function _clearQrTimeout(userId) {
+    const timeoutId = qrTimeouts.get(userId);
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+        qrTimeouts.delete(userId);
+    }
+}
+
+// Session limits with campaign consideration
+function _canCreateNewSession() {
+    const activeSessions = Array.from(sessions.values())
+        .filter(session => ['ready', 'pending'].includes(session.status));
+
+    const campaignSessions = activeSessions.filter(session =>
+        isUserRunningCampaign(session.userId)
+    );
+
+    // Prioritize campaign sessions
+    if (campaignSessions.length > 0) {
+        console.log(`🎯 Active campaigns: ${campaignSessions.length}`);
+    }
+
+    return activeSessions.length < MAX_CONCURRENT_SESSIONS;
+}
+
+// Retry attempt management
+function _getRetryAttempts(userId) {
+    return retryAttempts.get(userId) || 0;
+}
+
+function _incrementRetryAttempts(userId) {
+    const current = _getRetryAttempts(userId);
+    retryAttempts.set(userId, current + 1);
+    return current + 1;
+}
+
+// Update session metrics
+function _updateSessionMetrics(userId, event) {
+    userId = userId.toString();
+
+    if (!sessionMetrics.has(userId)) {
+        sessionMetrics.set(userId, {
+            createdAt: Date.now(),
+            events: [],
+            messageCount: 0,
+            qrGeneratedCount: 0
+        });
+    }
+
+    const metrics = sessionMetrics.get(userId);
+    metrics.events.push({event, timestamp: Date.now()});
+
+    if (event === 'message_processed') metrics.messageCount++;
+    if (event === 'qr_generated') metrics.qrGeneratedCount++;
+
+    // Keep only last 100 events to prevent memory bloat
+    if (metrics.events.length > 100) {
+        metrics.events = metrics.events.slice(-100);
+    }
+}
+
+// Main session initialization
+async function initOrGetSession(userId, io) {
+    userId = userId.toString();
+    console.log(`🟢 Initializing session for user ${userId}`);
+
+    // Check if already initializing
+    if (initializingUsers.has(userId)) {
+        console.log(`⚠️ Session already initializing for user ${userId}`);
+        return {
+            status: 'initializing',
+            message: 'Session is already being initialized',
+            canRetry: false
+        };
+    }
+
+    // Check session limits
+    if (!_canCreateNewSession() && !sessions.has(userId)) {
+        console.log(`❌ Session limit reached for new user ${userId}`);
+        return {
+            status: 'limit_reached',
+            message: `Maximum concurrent sessions (${MAX_CONCURRENT_SESSIONS}) reached. Please try again later.`,
+            canRetry: true,
+            retryAfter: 60000 // 1 minute
+        };
+    }
+
+    // Check retry limits
+    const attempts = _getRetryAttempts(userId);
+    if (attempts >= MAX_RETRY_ATTEMPTS) {
+        console.log(`❌ Max retry attempts reached for user ${userId}`);
+        return {
+            status: 'max_retries',
+            message: 'Maximum retry attempts reached. Please wait 10 minutes before trying again.',
+            canRetry: false,
+            retryAfter: 600000 // 10 minutes
+        };
+    }
+
+    // Check existing session
+    if (sessions.has(userId)) {
+        const session = sessions.get(userId);
+        session.io = io; // Update io reference
+
+        if (_isSessionActive(session)) {
+            console.log(`✅ Active session found for user ${userId}`);
+            _resetTimeout(userId);
+            _updateSessionMetrics(userId, 'session_reused');
+
+            return {
+                status: session.status,
+                qr: session.qr,
+                message: session.status === 'ready' ? 'Session is ready' : 'Session is connecting',
+                campaignProtected: isUserRunningCampaign(userId),
+                sessionAge: Date.now() - session.createdAt
+            };
+        } else {
+            console.log(`🔄 Destroying inactive session for user ${userId}`);
+            await _destroySession(userId, 'inactive');
+        }
+    }
+
+    // Mark as initializing
+    initializingUsers.add(userId);
+
+    try {
+        const result = await _createNewSession(userId, io);
+        _updateSessionMetrics(userId, 'session_created');
+        return result;
+    } catch (error) {
+        console.error(`❌ Failed to create session for user ${userId}:`, error.message);
+        initializingUsers.delete(userId);
+        _incrementRetryAttempts(userId);
+
+        return {
+            status: 'error',
+            message: 'Failed to initialize session. Please check your connection and try again.',
+            canRetry: attempts + 1 < MAX_RETRY_ATTEMPTS,
+            error: error.message
+        };
+    }
+}
+
+// Create new session
+async function _createNewSession(userId, io) {
     const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
+
     const client = new Client({
-        authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
+        authStrategy: new LocalAuth({
+            clientId,
+            dataPath: './.wwebjs_auth'
+        }),
         puppeteer: {
             headless: true,
-            executablePath: '/usr/bin/chromium',
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+            executablePath: process.env.CHROME_PATH || '/usr/bin/chromium',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--single-process',
+                '--disable-gpu',
+                '--no-zygote',
+                '--disable-extensions',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-features=TranslateUI',
+                '--disable-ipc-flooding-protection',
+                '--memory-pressure-off'
+            ],
         }
     });
 
     const session = {
+        userId,
         client,
-        status: 'pending',
+        status: 'initializing',
         lastActive: Date.now(),
         qr: null,
         timeoutId: null,
         io,
         botPaused: false,
-        pauseBot: () => {
-            session.botPaused = true;
+        createdAt: Date.now(),
+        pauseBot() {
+            this.botPaused = true;
+            console.log(`🤐 Bot paused for user ${userId}`);
         },
-        resumeBot: () => {
-            session.botPaused = false;
+        resumeBot() {
+            this.botPaused = false;
+            console.log(`🔊 Bot resumed for user ${userId}`);
         },
-        isBotPaused: () => session.botPaused,
+        isBotPaused() {
+            return this.botPaused;
+        },
     };
 
-
     sessions.set(userId, session);
+    _setupClientEventHandlers(client, session, userId);
 
-    client.on('qr', (qr) => {
-        console.log(`🟢 QR received for user ${userId}`);
-        try {
-            qrcode.generate(qr, {small: true});
-        } catch {
-            console.log('\n📲 Scan the QR code below:\n', qr);
-        }
-        session.io?.to(userId).emit('qr', qr);
-        session.qr = qr;
+    try {
+        await client.initialize();
+        console.log(`🟢 Client initialized for user ${userId}`);
         session.status = 'pending';
         _resetTimeout(userId);
+
+        initializingUsers.delete(userId);
+
+        return {
+            status: 'pending',
+            message: 'Session initialized, waiting for QR code or authentication',
+            sessionId: userId,
+            timeout: isUserRunningCampaign(userId) ? SESSION_TIMEOUT_MINUTES : IDLE_SESSION_TIMEOUT_MINUTES
+        };
+    } catch (error) {
+        console.error(`❌ Failed to initialize client for user ${userId}:`, error.message);
+        await _destroySession(userId, 'init_failed');
+        throw error;
+    }
+}
+
+// Setup client event handlers
+function _setupClientEventHandlers(client, session, userId) {
+    client.on('qr', (qr) => {
+        console.log(`📱 QR received for user ${userId}`);
+
+        try {
+            qrcode.generate(qr, {small: true});
+        } catch (error) {
+            console.log(`📱 QR code for user ${userId}: ${qr.substring(0, 50)}...`);
+        }
+
+        session.qr = qr;
+        session.status = 'pending';
+        session.lastActive = Date.now();
+
+        session.io?.to(userId).emit('qr', {
+            qr,
+            userId,
+            timestamp: Date.now(),
+            expiresIn: QR_TIMEOUT_MS
+        });
+
+        _setQrTimeout(userId);
+        _resetTimeout(userId);
+        _updateSessionMetrics(userId, 'qr_generated');
     });
 
     client.on('ready', async () => {
-        console.log(`🟢 Session for user ${userId} is ready`);
+        console.log(`✅ Session ready for user ${userId}`);
+
         session.status = 'ready';
         session.qr = null;
         session.lastActive = Date.now();
-        session.io?.to(userId).emit('ready');
+
+        _clearQrTimeout(userId);
+
+        session.io?.to(userId).emit('ready', {
+            userId,
+            timestamp: Date.now(),
+            campaignMode: isUserRunningCampaign(userId)
+        });
+
         _resetTimeout(userId);
-        await loadChatbotData(userId);
-        await WhatsappSession.findOneAndUpdate(
-            {userId},
-            {sessionData: {}, lastActiveAt: new Date()},
-            {upsert: true, new: true}
-        );
+        _updateSessionMetrics(userId, 'session_ready');
+
+        try {
+            await loadChatbotData(userId);
+            await WhatsappSession.findOneAndUpdate(
+                {userId},
+                {
+                    sessionData: {},
+                    lastActiveAt: new Date(),
+                    campaignActive: isUserRunningCampaign(userId)
+                },
+                {upsert: true, new: true}
+            );
+        } catch (error) {
+            console.error(`⚠️ Error loading chatbot data for ${userId}:`, error.message);
+        }
     });
 
     client.on('message', async (message) => {
         if (session.status !== 'ready') return;
 
+        session.lastActive = Date.now();
+        markCampaignActivity(userId, 'message_received');
+
         if (session.isBotPaused()) {
-            console.log(`🤖 Bot is paused for user ${userId}, message ignored.`);
+            console.log(`🤐 Bot paused for user ${userId}, ignoring message`);
             return;
         }
 
-        await handleIncomingMessage(client, userId, message);
+        try {
+            await handleIncomingMessage(client, userId, message);
+            markCampaignActivity(userId, 'message_processed');
+            _updateSessionMetrics(userId, 'message_processed');
 
-        if (!message.fromMe) {
-            session.io?.to(userId).emit('new-message', {
-                userId: userId,
-                id: message.id.id,
-                from: message.from.split('@')[0],
-                fromName: message.notifyName || message.from.split('@')[0],
-                body: message.body,
-                timestamp: message.timestamp * 1000,
-            });
+            if (!message.fromMe) {
+                session.io?.to(userId).emit('new-message', {
+                    userId: userId,
+                    id: message.id.id,
+                    from: message.from.split('@')[0],
+                    fromName: message.notifyName || message.from.split('@')[0],
+                    body: message.body,
+                    timestamp: message.timestamp * 1000,
+                });
+            } else {
+                // Track outgoing messages for campaign detection
+                markCampaignActivity(userId, 'message_sent');
+            }
+        } catch (error) {
+            console.error(`❌ Error handling message for ${userId}:`, error.message);
         }
     });
 
-    client.on('auth_failure', (msg) => {
-        console.log(`🟢 Auth failure for user ${userId}`);
+    client.on('auth_failure', async (msg) => {
+        console.log(`❌ Auth failure for user ${userId}:`, msg);
+
         session.status = 'auth_failure';
-        session.io?.to(userId).emit('auth_failure', msg);
-        _destroySession(userId);
+        session.io?.to(userId).emit('auth_failure', {
+            message: msg,
+            userId,
+            canRetry: _getRetryAttempts(userId) < MAX_RETRY_ATTEMPTS
+        });
+
+        await _destroySession(userId, 'auth_failure');
     });
 
-    client.on('disconnected', (reason) => {
-        console.log(`🟢 Disconnected: ${userId} =>`, reason);
+    client.on('disconnected', async (reason) => {
+        console.log(`🔌 Disconnected for user ${userId}:`, reason);
+
         session.status = 'disconnected';
-        session.io?.to(userId).emit('disconnected', reason);
-        _destroySession(userId);
+        session.io?.to(userId).emit('disconnected', {
+            reason,
+            userId,
+            campaignProtected: isUserRunningCampaign(userId)
+        });
+
+        // Don't immediately destroy if campaign is active
+        if (isUserRunningCampaign(userId)) {
+            console.log(`🛡️ Campaign active, attempting reconnection for ${userId}`);
+            session.io?.to(userId).emit('reconnecting', {userId});
+
+            // Attempt to reinitialize after short delay
+            setTimeout(async () => {
+                try {
+                    console.log(`🔄 Attempting reconnection for ${userId}`);
+                    await initOrGetSession(userId, session.io);
+                } catch (error) {
+                    console.error(`❌ Reconnection failed for ${userId}:`, error.message);
+                    await _destroySession(userId, 'reconnection_failed');
+                }
+            }, 5000);
+        } else {
+            await _destroySession(userId, 'disconnected');
+        }
     });
 
-    await client.initialize();
-    console.log(`🟢 Session for user ${userId} initialized`);
+    client.on('error', async (error) => {
+        console.error(`❌ Client error for user ${userId}:`, error.message);
 
-    _resetTimeout(userId);
+        session.io?.to(userId).emit('error', {
+            message: 'WhatsApp client error occurred',
+            userId,
+            error: error.message
+        });
 
-    return {status: session.status, message: 'Session initialized, waiting for QR'};
+        if (error.message.includes('CONFLICT') || error.message.includes('Session closed')) {
+            if (!isUserRunningCampaign(userId)) {
+                await _destroySession(userId, 'client_error');
+            } else {
+                console.log(`🛡️ Campaign active, not destroying session due to error for ${userId}`);
+            }
+        }
+    });
 }
 
-// checking if the session variable has the session or not if not the req to init will be sent again and the session will get stored
-function getClient(userId) {
-    return sessions.get(userId.toString());
-}
-
-// fetching the session status
+// Enhanced session status check
 function getSessionStatus(userId) {
-    const session = sessions.get(userId.toString());
-    if (!session) return {status: 'no_session'};
+    userId = userId.toString();
+    const session = sessions.get(userId);
+
+    if (!session) {
+        return {
+            status: 'no_session',
+            message: 'No session found',
+            canCreate: _canCreateNewSession()
+        };
+    }
+
+    const isActive = _isSessionActive(session);
+    const isCampaign = isUserRunningCampaign(userId);
+    const metrics = sessionMetrics.get(userId);
+
     return {
-        status: session.status,
+        status: isActive ? session.status : 'inactive',
         qr: session.qr || null,
+        lastActive: session.lastActive,
+        createdAt: session.createdAt,
+        botPaused: session.botPaused,
+        campaignActive: isCampaign,
+        campaignProtected: isCampaign,
+        message: isActive ? 'Session is active' : 'Session is inactive',
+        metrics: metrics ? {
+            messageCount: metrics.messageCount,
+            qrCount: metrics.qrGeneratedCount,
+            uptime: Date.now() - metrics.createdAt
+        } : null
     };
 }
 
-// fetching the client
+// Get client with validation
+function getClient(userId) {
+    userId = userId.toString();
+    const session = sessions.get(userId);
+
+    if (!session || !_isSessionActive(session)) {
+        return null;
+    }
+
+    return session;
+}
+
+// Enhanced client check
 function hasClient(userId) {
-    const session = sessions.get(userId.toString());
+    userId = userId.toString();
+    const session = sessions.get(userId);
+
     if (!session || !session.client) return false;
 
-    const inactiveTime = Date.now() - session.lastActive;
-    const isTimedOut = inactiveTime > SESSION_TIMEOUT_MINUTES * 60 * 1000;
-
-    if (isTimedOut) {
-        sessions.delete(userId.toString());
-        WhatsappSession.deleteOne({userId}).catch(console.error);
-        console.log(`Session for user ${userId} timed out and was deleted.`);
-        return false;
-    }
-    return true;
+    return _isSessionActive(session);
 }
 
-// this will fetch the raw session
+// Get raw session (for debugging)
 function __getRawSession(userId) {
-    userId = userId.toString();
-    return sessions.get(userId);
+    return sessions.get(userId.toString());
 }
 
+// Cleanup orphaned sessions on startup
+async function cleanupOrphanedSessions() {
+    try {
+        const authDir = './.wwebjs_auth';
+        const entries = await fs.readdir(authDir).catch(() => []);
+
+        console.log(`🧹 Cleaning up ${entries.length} potential orphaned sessions...`);
+
+        for (const entry of entries) {
+            if (entry.startsWith('session-')) {
+                const sessionPath = path.join(authDir, entry);
+                try {
+                    await fs.rm(sessionPath, {recursive: true, force: true});
+                    console.log(`🗑️ Cleaned orphaned session: ${entry}`);
+                } catch (error) {
+                    console.warn(`⚠️ Failed to clean ${entry}:`, error.message);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error during startup cleanup:', error.message);
+    }
+}
+
+// Smart maintenance cleanup with campaign protection
+async function performMaintenanceCleanup() {
+    console.log('🧹 Performing maintenance cleanup...');
+
+    const sessionsToCleanup = [];
+    const campaignSessions = [];
+
+    for (const [userId, session] of sessions.entries()) {
+        if (!_isSessionActive(session)) {
+            if (isUserRunningCampaign(userId)) {
+                campaignSessions.push(userId);
+                console.log(`🛡️ Protecting campaign session from cleanup: ${userId}`);
+            } else {
+                sessionsToCleanup.push(userId);
+            }
+        }
+    }
+
+    // Clean up non-campaign sessions
+    for (const userId of sessionsToCleanup) {
+        console.log(`🧹 Cleaning up inactive session for user ${userId}`);
+        await _destroySession(userId, 'maintenance');
+    }
+
+    // Clear old campaign activity data (older than 24 hours)
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    for (const [userId, activity] of campaignActivity.entries()) {
+        if (activity.lastActivity < oneDayAgo) {
+            campaignActivity.delete(userId);
+            console.log(`🧹 Cleared old campaign data for ${userId}`);
+        }
+    }
+
+    console.log(`🧹 Maintenance completed. Cleaned ${sessionsToCleanup.length} sessions, protected ${campaignSessions.length} campaigns.`);
+}
+
+// Graceful shutdown
+async function shutdown() {
+    console.log('🔄 Shutting down session manager...');
+
+    // Clear maintenance interval
+    if (maintenanceInterval) {
+        clearInterval(maintenanceInterval);
+    }
+
+    const shutdownPromises = [];
+
+    for (const [userId, session] of sessions.entries()) {
+        // Force destroy all sessions during shutdown
+        shutdownPromises.push(_destroySession(userId, 'shutdown', true));
+    }
+
+    await Promise.allSettled(shutdownPromises);
+
+    // Clear all timeouts
+    for (const timeoutId of qrTimeouts.values()) {
+        clearTimeout(timeoutId);
+    }
+    qrTimeouts.clear();
+
+    console.log('✅ Session manager shutdown completed');
+}
+
+// Initialize maintenance
+function startMaintenance() {
+    // Initial cleanup
+    cleanupOrphanedSessions();
+
+    // Schedule periodic maintenance
+    maintenanceInterval = setInterval(performMaintenanceCleanup, MAINTENANCE_INTERVAL_MS);
+
+    console.log(`🔧 Maintenance scheduled every ${MAINTENANCE_INTERVAL_MS / 60000} minutes`);
+}
+
+// Start maintenance on module load
+startMaintenance();
+
+// Graceful shutdown handling
+process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
+    await shutdown();
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('Received SIGINT, shutting down gracefully...');
+    await shutdown();
+    process.exit(0);
+});
+
+// Export campaign activity functions for external use
 module.exports = {
     initOrGetSession,
     getClient,
@@ -228,4 +834,12 @@ module.exports = {
     __getRawSession,
     hasClient,
     sessions,
+    shutdown,
+    // Campaign management functions
+    markCampaignActivity,
+    isUserRunningCampaign,
+    // Utility functions
+    getCampaignStats: (userId) => campaignActivity.get(userId.toString()),
+    getSessionMetrics: (userId) => sessionMetrics.get(userId.toString()),
+    forceDestroySession: (userId) => _destroySession(userId, 'force', true)
 };
