@@ -3,17 +3,35 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
-const { Server } = require('socket.io');
+const {Server} = require('socket.io');
 const routes = require('./routes/Route');
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {cors: {origin: '*'}});
 global.sessionManager = require('./Backup/whatsapp/sessionManager');
 const initOrGetSession = require('./controllers/startController').initOrGetSession;
 
 global.io = io;
 
-app.use(cors());
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://alokcode.tech',
+    'https://whats-app-bot-eta.vercel.app',
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI)
@@ -41,5 +59,5 @@ io.on('connection', (socket) => {
 app.use('/', routes(io));
 
 server.listen(process.env.PORT || 5000, () => {
-    console.log('Server running on' , process.env.PORT);
+    console.log('Server running on', process.env.PORT);
 });
