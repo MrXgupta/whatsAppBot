@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useSelector} from "react-redux";
 
@@ -21,7 +21,7 @@ const ChatbotLogs = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot-conversations` , {
+                const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/chatbot-conversations`, {
                     userId: user._id,
                 });
                 if (res.data.success) {
@@ -59,17 +59,17 @@ const ChatbotLogs = () => {
                                     <table className="min-w-full text-sm text-left text-gray-700">
                                         <thead className="bg-gray-200 uppercase text-xs font-bold">
                                         <tr>
-                                            <th className="px-4 py-3">Query</th>
-                                            <th className="px-4 py-3">Response</th>
-                                            <th className="px-4 py-3">Timestamp</th>
+                                            <th className="px-4 py-3 w-1/5">Query</th>
+                                            <th className="px-4 py-3 w-3/5">Response</th>
+                                            <th className="px-4 py-3 w-1/5">Timestamp</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         {convo.chats.map((chat, idx) => (
                                             <tr key={idx} className="border-t hover:bg-gray-50">
-                                                <td className="px-4 py-2">{chat.query}</td>
-                                                <td className="px-4 py-2">{chat.response}</td>
-                                                <td className="px-4 py-2 text-gray-500">
+                                                <td className="px-4 py-2 w-1/5 break-words">{chat.query}</td>
+                                                <td className="px-4 py-2 w-3/5 break-words">{chat.response}</td>
+                                                <td className="px-4 py-2 w-1/5 text-gray-500">
                                                     {formatDate(chat.timestamp)}
                                                 </td>
                                             </tr>

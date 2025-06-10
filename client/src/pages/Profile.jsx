@@ -301,7 +301,7 @@ const Profile = () => {
                     </div>
 
                     {/* QR Code display */}
-                    {initStatus === "scanning" && qr && !qrScanned || (
+                    {initStatus === "scanning" && qr && !qrScanned && (
                         <div className="flex flex-col items-center mb-8">
                             <div className="p-4 bg-white rounded-xl shadow-md mb-4">
                                 <QRCode
