@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
 import axios from "axios";
-import swal from "sweetalert2";
+import Swal from "sweetalert2";
 import {useSelector} from "react-redux";
 
 const CampaignStats = () => {
@@ -24,11 +24,11 @@ const CampaignStats = () => {
                     limit,
                     sortBy,
                     order,
-                    ...(fromDate && { fromDate }),
-                    ...(toDate && { toDate }),
+                    ...(fromDate && {fromDate}),
+                    ...(toDate && {toDate}),
                 });
 
-                const { data } = await axios.post(`${import.meta.env.VITE_BASE_URL}/campaign-stats?${params.toString()}` , {
+                const {data} = await axios.post(`${import.meta.env.VITE_BASE_URL}/campaign-stats?${params.toString()}`, {
                     userId: user._id,
                 });
                 setCampaignStats(data.campaigns || []);
@@ -38,28 +38,58 @@ const CampaignStats = () => {
             }
         };
         fetchStats();
-    }, [page, refetch, sortBy, order, fromDate, toDate , user._id]);
+    }, [page, refetch, sortBy, order, fromDate, toDate, user._id]);
 
 
     const handleDelete = async (id) => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const userId = user?._id;
+            const result = await Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+            });
 
-            const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/deleteCampaign/${id}/${userId}`);
+            if (result.isConfirmed) {
 
-            if (res.status === 200) {
-                swal.fire({
-                    icon: "success",
-                    title: "Deleted",
-                    text: "Campaign deleted successfully"
-                });
-                setRefetch(!refetch);
+                const user = JSON.parse(localStorage.getItem('user'));
+                const userId = user?._id;
+
+                const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/deleteCampaign/${id}/${userId}`);
+
+                if (res.status === 200) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Deleted",
+                        text: "Campaign deleted successfully"
+                    });
+                    setRefetch(!refetch);
+                } else {
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: `Failed to delete campaign. Status code: ${res.status}`
+                    });
+                    console.error("Error deleting campaign: Unexpected status code", res.status, res.data);
+                }
+            } else {
+                // Handle cancellation
+                Swal.fire("Cancelled", "Your campaign is safe :)", "info");
             }
         } catch (err) {
             console.error("Error deleting campaign:", err);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "An error occurred while deleting the campaign."
+            });
         }
     };
+
 
     return (
         <div className="bg-white p-4 rounded shadow mt-6">

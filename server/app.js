@@ -39,20 +39,22 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch(err => console.error('MongoDB connection error:', err));
 
 io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-
     socket.on('join', async (userId) => {
         if (!userId) {
             console.warn(`User ID missing for socket ${socket.id}`);
             return;
         }
-
-        console.log(`Socket ${socket.id} joining room: ${userId}`);
-        socket.join(userId.toString());
-
+        const room = userId.toString();
+        if (socket.rooms.has(room)) {
+            console.log(`🔁 Socket ${socket.id} already joined room ${room}`);
+            return;
+        }
+        console.log(`Socket ${socket.id} joining room: ${room}`);
+        socket.join(room);
         const result = await initOrGetSession(userId, io);
         console.log(`Session status for ${userId}:`, result);
     });
+
 });
 
 
