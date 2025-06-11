@@ -69,26 +69,24 @@ async function initOrGetSession(userId, io) {
     console.log(`🟢 Initializing or getting session for user ${userId}`);
 
     if (sessions.has(userId)) {
-        const session = sessions.get(userId);
+        const existing = sessions.get(userId);
+        existing.io = io;
 
-        // 🔒 Prevent duplicate init
-        if (session.initializing) {
+        if (existing.initializing) {
             console.log(`⚠️ Session for user ${userId} is already initializing.`);
-            return {status: session.status};
+            return {status: existing.status};
         }
 
-        session.io = io;
-
-        if (_isSessionActive(session)) {
-            console.log(`🟢 Session for user ${userId} already active`);
-            return {status: session.status};
+        if (_isSessionActive(existing)) {
+            console.log(`✅ Active session found for user ${userId}`);
+            return {status: existing.status};
         }
 
-        await _destroySession(userId); // Only destroy if inactive
+        console.log(`♻️ Destroying inactive or stuck session for user ${userId}`);
+        await _destroySession(userId);
     }
 
-
-    const authPath = path.join('./.wwebjs_auth', `session-${clientId}`);
+    const authPath = path.join('./.wwebjs_auth', `session-${userId}`);
     const lockFile = path.join(authPath, 'SingletonLock');
 
     if (fs.existsSync(lockFile)) {
@@ -100,15 +98,13 @@ async function initOrGetSession(userId, io) {
         }
     }
 
-
     const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     const client = new Client({
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
             executablePath: '/usr/bin/chromium-browser',
-            userDataDir: `./.wwebjs_user_data/${clientId}`,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         }
     });
 
@@ -121,39 +117,46 @@ async function initOrGetSession(userId, io) {
         timeoutId: null,
         io,
         botPaused: false,
-        pauseBot: () => {
-            session.botPaused = true;
-        },
-        resumeBot: () => {
-            session.botPaused = false;
-        },
+        pauseBot: () => session.botPaused = true,
+        resumeBot: () => session.botPaused = false,
         isBotPaused: () => session.botPaused
     };
 
     sessions.set(userId, session);
 
+    let qrTimeout;
+
     client.on('qr', (qr) => {
-        console.log(`🟢 QR received for user ${userId}`);
-        try {
-            qrcode.generate(qr, {small: true});
-        } catch {
-            console.log('\n📲 Scan the QR code below:\n', qr);
-        }
-        session.io?.to(userId).emit('qr', qr);
+        console.log(`📸 QR received for user ${userId}`);
         session.qr = qr;
         session.status = 'pending';
+        session.io.of("/").to(userId).emit('qr', qr);
+
         _resetTimeout(userId);
+
+        if (qrTimeout) clearTimeout(qrTimeout);
+        qrTimeout = setTimeout(async () => {
+            if (session.status === 'pending') {
+                console.log(`⏱️ QR timeout for user ${userId}`);
+                session.io?.to(userId).emit('qr_timeout');
+                await _destroySession(userId);
+            }
+        }, 90 * 1000); // QR timeout increased to 90 seconds
     });
 
     client.on('ready', async () => {
-        console.log(`🟢 Session for user ${userId} is ready`);
+        console.log(`✅ Session ready for user ${userId}`);
         session.initializing = false;
         session.status = 'ready';
         session.qr = null;
         session.lastActive = Date.now();
+        if (qrTimeout) clearTimeout(qrTimeout);
         session.io?.to(userId).emit('ready');
+
         _resetTimeout(userId);
+
         await loadChatbotData(userId);
+
         await WhatsappSession.findOneAndUpdate(
             {userId},
             {sessionData: {}, lastActiveAt: new Date()},
@@ -161,17 +164,36 @@ async function initOrGetSession(userId, io) {
         );
     });
 
+    client.on('auth_failure', async (msg) => {
+        console.log(`❌ Auth failure for user ${userId}`);
+        session.initializing = false;
+        session.status = 'auth_failure';
+        session.io?.to(userId).emit('auth_failure', msg);
+        if (qrTimeout) clearTimeout(qrTimeout);
+        await _destroySession(userId);
+    });
+
+    client.on('disconnected', async (reason) => {
+        console.log(`🔌 Disconnected: ${userId} => ${reason}`);
+        session.initializing = false;
+        session.status = 'disconnected';
+        session.io?.to(userId).emit('disconnected', reason);
+        if (qrTimeout) clearTimeout(qrTimeout);
+        await _destroySession(userId);
+    });
+
     client.on('message', async (message) => {
         if (session.status !== 'ready') return;
         if (session.isBotPaused()) {
-            console.log(`🤖 Bot is paused for user ${userId}, message ignored.`);
+            console.log(`🤖 Bot paused for user ${userId}, ignoring message`);
             return;
         }
+
         await handleIncomingMessage(client, userId, message);
 
         if (!message.fromMe) {
             session.io?.to(userId).emit('new-message', {
-                userId: userId,
+                userId,
                 id: message.id.id,
                 from: message.from.split('@')[0],
                 fromName: message.notifyName || message.from.split('@')[0],
@@ -181,38 +203,18 @@ async function initOrGetSession(userId, io) {
         }
     });
 
-    client.on('auth_failure', async (msg) => {
-        console.log(`❌ Auth failure for user ${userId}`);
+    try {
+        await client.initialize();
+        console.log(`📲 Client initialized for user ${userId}`);
+    } catch (err) {
+        console.error(`💥 Failed to initialize client for ${userId}:`, err.message);
+        session.status = 'init_failed';
         session.initializing = false;
-        session.status = 'auth_failure';
-        session.io?.to(userId).emit('auth_failure', msg);
+        session.io?.to(userId).emit('init_failed', err.message);
         await _destroySession(userId);
-    });
+    }
 
-    client.on('disconnected', async (reason) => {
-        console.log(`🟠 Disconnected: ${userId} =>`, reason);
-        session.initializing = false;
-        session.status = 'disconnected';
-        session.io?.to(userId).emit('disconnected', reason);
-        await _destroySession(userId);
-    });
-
-    setTimeout(() => {
-        if (session.status === 'pending') {
-            console.log(`⏱️ QR timeout for ${userId}, reinitializing...`);
-            client.destroy().then(() => {
-                fs.rmSync(`.wwebjs_auth/session-${clientId}`, {recursive: true, force: true});
-                sessions.delete(userId);
-                initOrGetSession(userId, io);
-            }).catch(err => console.error(`⚠️ Failed to destroy on QR timeout:`, err));
-        }
-    }, 30000);
-
-    await client.initialize();
-    console.log(`🟢 Session for user ${userId} initialized`);
-
-    _resetTimeout(userId);
-    return {status: session.status, message: 'Session initialized, waiting for QR'};
+    return {status: session.status, message: 'Session initializing or waiting for QR'};
 }
 
 function getClient(userId) {

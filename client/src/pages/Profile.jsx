@@ -23,7 +23,6 @@ const Profile = () => {
     const navigate = useNavigate();
     const {qr, qrStatus} = useSelector((state) => state.app);
     const user = useSelector((state) => state.user);
-
     const hasInitialized = useRef(false);
     const [initStatus, setInitStatus] = useState("searching");
     const [loading, setLoading] = useState(true);
@@ -37,6 +36,7 @@ const Profile = () => {
 
             socketRef.on("connect", () => {
                 console.log("Socket connected");
+                console.log("Socket ID:", socketRef);
             });
 
             socketRef.on("disconnect", () => {
@@ -266,6 +266,10 @@ const Profile = () => {
                 <div className="bg-green-500 text-white p-6">
                     <h1 className="text-3xl font-bold">WhatsApp Connection</h1>
                     <p className="mt-2 opacity-90">Connect your WhatsApp account to continue</p>
+                    <p className="text-red-500">**Please keep in Mind this is beta mood and only for experimental
+                        purposes ,
+                        Please use it with
+                        responsibility**</p>
                 </div>
 
                 <div className="p-6">

@@ -65,14 +65,23 @@ const SendBulkMsg = (io) => {
                 logs: [],
             });
 
-            res.status(200).json({success: true, campaignId: campaign._id, total: validNumbers.length});
+            // Limit to 10 contacts for beta mode
+            const BETA_CONTACT_LIMIT = 10;
+            const betaLimitedNumbers = validNumbers.slice(0, BETA_CONTACT_LIMIT);
+
+            res.status(200).json({
+                success: true,
+                campaignId: campaign._id,
+                total: betaLimitedNumbers.length,
+                betaNotice: `Beta mode active: Only first ${BETA_CONTACT_LIMIT} contacts will be messaged.`,
+            });
+
 
             // Async messaging
             (async () => {
-                for (let i = 0; i < validNumbers.length; i++) {
+                for (let i = 0; i < betaLimitedNumbers.length; i++) {
                     touchSession(userId);
-
-                    const number = validNumbers[i];
+                    const number = betaLimitedNumbers[i];
                     let status = 'success';
                     let error = '';
 
@@ -102,10 +111,11 @@ const SendBulkMsg = (io) => {
                         number,
                         status,
                         error,
-                        progress: ((i + 1) / validNumbers.length) * 100,
+                        progress: ((i + 1) / betaLimitedNumbers.length) * 100,
                         campaignId: campaign._id
                     });
                 }
+
 
                 campaign.status = 'completed';
                 await campaign.save();

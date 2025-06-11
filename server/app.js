@@ -7,11 +7,8 @@ const {Server} = require('socket.io');
 const routes = require('./routes/Route');
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {cors: {origin: '*'}});
 global.sessionManager = require('./Backup/whatsapp/sessionManager');
 const initOrGetSession = require('./controllers/startController').initOrGetSession;
-
-global.io = io;
 
 const allowedOrigins = [
     'http://localhost:5173',
@@ -21,15 +18,29 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
+        // Allow no origin (e.g., mobile apps or curl)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
         }
+
+        console.warn('Blocked by CORS:', origin);
+        return callback(new Error('Not allowed by CORS'));
     },
+    credentials: true,
 };
+
+const io = new Server(server, {
+    cors: {
+        origin: allowedOrigins,
+        credentials: true,
+        methods: ['GET', 'POST']
+    }
+});
+
+global.io = io;
+
 
 app.use(cors(corsOptions));
 app.use(express.json());
