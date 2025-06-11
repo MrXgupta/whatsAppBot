@@ -8,6 +8,7 @@ const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbot
 const SESSION_TIMEOUT_MINUTES = 3000;
 const sessions = new Map();
 
+
 function _isSessionActive(session) {
     if (!session) return false;
     if (session.status !== 'ready' && session.status !== 'pending') return false;
@@ -69,19 +70,44 @@ async function initOrGetSession(userId, io) {
 
     if (sessions.has(userId)) {
         const session = sessions.get(userId);
+
+        // 🔒 Prevent duplicate init
+        if (session.initializing) {
+            console.log(`⚠️ Session for user ${userId} is already initializing.`);
+            return {status: session.status};
+        }
+
         session.io = io;
-        if (_isSessionActive(session) && session.client && session.client.info) {
+
+        if (_isSessionActive(session)) {
             console.log(`🟢 Session for user ${userId} already active`);
             return {status: session.status};
         }
-        await _destroySession(userId);
+
+        await _destroySession(userId); // Only destroy if inactive
     }
+
+
+    const authPath = path.join('./.wwebjs_auth', `session-${clientId}`);
+    const lockFile = path.join(authPath, 'SingletonLock');
+
+    if (fs.existsSync(lockFile)) {
+        try {
+            fs.unlinkSync(lockFile);
+            console.log(`🔓 Removed stale SingletonLock for user ${userId}`);
+        } catch (e) {
+            console.warn(`⚠️ Failed to remove SingletonLock for ${userId}:`, e.message);
+        }
+    }
+
 
     const clientId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
     const client = new Client({
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
+            executablePath: '/usr/bin/chromium-browser',
+            userDataDir: `./.wwebjs_user_data/${clientId}`,
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
         }
     });
@@ -89,6 +115,7 @@ async function initOrGetSession(userId, io) {
     const session = {
         client,
         status: 'pending',
+        initializing: true,
         lastActive: Date.now(),
         qr: null,
         timeoutId: null,
@@ -120,6 +147,7 @@ async function initOrGetSession(userId, io) {
 
     client.on('ready', async () => {
         console.log(`🟢 Session for user ${userId} is ready`);
+        session.initializing = false;
         session.status = 'ready';
         session.qr = null;
         session.lastActive = Date.now();
@@ -155,6 +183,7 @@ async function initOrGetSession(userId, io) {
 
     client.on('auth_failure', async (msg) => {
         console.log(`❌ Auth failure for user ${userId}`);
+        session.initializing = false;
         session.status = 'auth_failure';
         session.io?.to(userId).emit('auth_failure', msg);
         await _destroySession(userId);
@@ -162,6 +191,7 @@ async function initOrGetSession(userId, io) {
 
     client.on('disconnected', async (reason) => {
         console.log(`🟠 Disconnected: ${userId} =>`, reason);
+        session.initializing = false;
         session.status = 'disconnected';
         session.io?.to(userId).emit('disconnected', reason);
         await _destroySession(userId);
