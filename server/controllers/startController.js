@@ -8,7 +8,6 @@ const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbot
 const SESSION_TIMEOUT_MINUTES = 3000;
 const sessions = new Map();
 
-// checking if the session is active or not
 function _isSessionActive(session) {
     if (!session) return false;
     if (session.status !== 'ready' && session.status !== 'pending') return false;
@@ -16,7 +15,6 @@ function _isSessionActive(session) {
     return inactiveMs <= SESSION_TIMEOUT_MINUTES * 60 * 1000;
 }
 
-// destroy the session and del the session dir from .wwebjs_auth too
 async function _destroySession(userId) {
     userId = userId.toString();
 
@@ -48,12 +46,11 @@ async function _destroySession(userId) {
         } catch (e) {
             console.error(`Error deleting auth folder for ${userId}:`, e.message);
         }
-    }, 3000); // wait 3 seconds
+    }, 3000);
 
     console.log(`Session for user ${userId} destroyed and DB entry deleted.`);
 }
 
-// reset time and if time out then destroy the session
 function _resetTimeout(userId) {
     userId = userId.toString();
     const session = sessions.get(userId);
@@ -66,7 +63,6 @@ function _resetTimeout(userId) {
     }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
 }
 
-// main function to connect the client, check if the session is available or not or create a new session
 async function initOrGetSession(userId, io) {
     userId = userId.toString();
     console.log(`🟢 Initializing or getting session for user ${userId}`);
@@ -74,7 +70,7 @@ async function initOrGetSession(userId, io) {
     if (sessions.has(userId)) {
         const session = sessions.get(userId);
         session.io = io;
-        if (_isSessionActive(session)) {
+        if (_isSessionActive(session) && session.client && session.client.info) {
             console.log(`🟢 Session for user ${userId} already active`);
             return {status: session.status};
         }
@@ -86,8 +82,7 @@ async function initOrGetSession(userId, io) {
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            // executablePath: '/usr/bin/chromium',
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
         }
     });
 
@@ -105,9 +100,8 @@ async function initOrGetSession(userId, io) {
         resumeBot: () => {
             session.botPaused = false;
         },
-        isBotPaused: () => session.botPaused,
+        isBotPaused: () => session.botPaused
     };
-
 
     sessions.set(userId, session);
 
@@ -141,12 +135,10 @@ async function initOrGetSession(userId, io) {
 
     client.on('message', async (message) => {
         if (session.status !== 'ready') return;
-
         if (session.isBotPaused()) {
             console.log(`🤖 Bot is paused for user ${userId}, message ignored.`);
             return;
         }
-
         await handleIncomingMessage(client, userId, message);
 
         if (!message.fromMe) {
@@ -161,51 +153,56 @@ async function initOrGetSession(userId, io) {
         }
     });
 
-    client.on('auth_failure', (msg) => {
-        console.log(`🟢 Auth failure for user ${userId}`);
+    client.on('auth_failure', async (msg) => {
+        console.log(`❌ Auth failure for user ${userId}`);
         session.status = 'auth_failure';
         session.io?.to(userId).emit('auth_failure', msg);
-        _destroySession(userId);
+        await _destroySession(userId);
     });
 
-    client.on('disconnected', (reason) => {
-        console.log(`🟢 Disconnected: ${userId} =>`, reason);
+    client.on('disconnected', async (reason) => {
+        console.log(`🟠 Disconnected: ${userId} =>`, reason);
         session.status = 'disconnected';
         session.io?.to(userId).emit('disconnected', reason);
-        _destroySession(userId);
+        await _destroySession(userId);
     });
+
+    setTimeout(() => {
+        if (session.status === 'pending') {
+            console.log(`⏱️ QR timeout for ${userId}, reinitializing...`);
+            client.destroy().then(() => {
+                fs.rmSync(`.wwebjs_auth/session-${clientId}`, {recursive: true, force: true});
+                sessions.delete(userId);
+                initOrGetSession(userId, io);
+            }).catch(err => console.error(`⚠️ Failed to destroy on QR timeout:`, err));
+        }
+    }, 30000);
 
     await client.initialize();
     console.log(`🟢 Session for user ${userId} initialized`);
 
     _resetTimeout(userId);
-
     return {status: session.status, message: 'Session initialized, waiting for QR'};
 }
 
-// checking if the session variable has the session or not if not the req to init will be sent again and the session will get stored
 function getClient(userId) {
     return sessions.get(userId.toString());
 }
 
-// fetching the session status
 function getSessionStatus(userId) {
     const session = sessions.get(userId.toString());
     if (!session) return {status: 'no_session'};
     return {
         status: session.status,
-        qr: session.qr || null,
+        qr: session.qr || null
     };
 }
 
-// fetching the client
 function hasClient(userId) {
     const session = sessions.get(userId.toString());
     if (!session || !session.client) return false;
-
     const inactiveTime = Date.now() - session.lastActive;
     const isTimedOut = inactiveTime > SESSION_TIMEOUT_MINUTES * 60 * 1000;
-
     if (isTimedOut) {
         sessions.delete(userId.toString());
         WhatsappSession.deleteOne({userId}).catch(console.error);
@@ -215,10 +212,8 @@ function hasClient(userId) {
     return true;
 }
 
-// this will fetch the raw session
 function __getRawSession(userId) {
-    userId = userId.toString();
-    return sessions.get(userId);
+    return sessions.get(userId.toString());
 }
 
 module.exports = {
