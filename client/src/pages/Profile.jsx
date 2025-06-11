@@ -261,16 +261,68 @@ const Profile = () => {
     const statusInfo = getStatusInfo();
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
             <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-green-500 text-white p-6">
                     <h1 className="text-3xl font-bold">WhatsApp Connection</h1>
                     <p className="mt-2 opacity-90">Connect your WhatsApp account to continue</p>
-                    <p className="text-red-500">**Please keep in Mind this is beta mood and only for experimental
+                    <p className="text-red-500 font-medium">**Please keep in Mind this is beta mood and only for
+                        experimental
                         purposes ,
                         Please use it with
                         responsibility**</p>
                 </div>
+
+                <details className="px-4 pt-2 text-sm">
+                    <summary className="text-red-500 font-semibold cursor-pointer">
+                        Beta Access Info & Known Issues
+                    </summary>
+                    <div className="mt-2 space-y-2 text-gray-800">
+                        <p><strong>🧪 Welcome to the Beta!</strong> You're using an early access version of our WhatsApp
+                            Automation Platform. This version is still under active development, and you might encounter
+                            a few hiccups.</p>
+
+                        <p><strong>⚠️ Known Issues & Possible Scenarios:</strong></p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li><strong>QR Code Not Generating:</strong> This may be due to temporary server load,
+                                session locking, or network delays. Please wait 1–2 minutes, and refresh or try again.
+                            </li>
+                            <li><strong>Session Getting Stuck:</strong> If the app says "initializing session" for a
+                                long time, it's possible a previous session was interrupted. Try restarting the app, or
+                                clearing the browser cache and reloading.
+                            </li>
+                            <li><strong>Socket Disconnections:</strong> If you're getting disconnected frequently,
+                                ensure your internet is stable. We're actively working on improving socket reliability.
+                            </li>
+                            <li><strong>Chrome Debug File Locked Error:</strong> In some rare cases, background Chrome
+                                processes hold on to session files. This can block re-authentication. Close all Chrome
+                                or Electron-based apps and retry.
+                            </li>
+                        </ul>
+
+                        <p><strong>🛠 What You Can Try:</strong></p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Reload the page and wait a few seconds before retrying.</li>
+                            <li>Ensure no other tab or session is already using WhatsApp Web.</li>
+                            <li>Try using a different browser or private/incognito window.</li>
+                            <li>If using Electron or a desktop version, close and reopen the app.</li>
+                            <li>Try after a few minutes — the issue may be due to temporary load.</li>
+                        </ul>
+
+                        <p><strong>📨 Still stuck?</strong> Please help us improve by reporting your issue here — <a
+                            href="https://tally.so/r/mZLe0V" target="_blank" rel="noopener noreferrer"
+                            className="underline text-blue-600">Click to Report a Bug</a></p>
+
+                        <p><strong>🚧 We're actively working on it:</strong> All these bugs are being tracked and fixed.
+                            The beta phase helps us identify edge cases and server scaling issues.</p>
+
+                        <p><strong>✅ Final Release Promise:</strong> The stable release will be polished, bug-free, and
+                            optimized for performance. Thank you for your support and patience during this phase — it
+                            means a lot! 💙</p>
+
+                        <p><em>— Team WaBot 🚀</em></p>
+                    </div>
+                </details>
 
                 <div className="p-6">
                     <div
