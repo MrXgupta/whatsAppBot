@@ -4,10 +4,10 @@ const WhatsappSession = require('../models/WhatsappSession');
 const path = require('path');
 const fs = require('fs');
 const {handleIncomingMessage, loadChatbotData} = require('../controllers/chatbotController');
+const {getUserSocket} = require('./socketStore');
 
 const SESSION_TIMEOUT_MINUTES = 3000;
 const sessions = new Map();
-
 
 function _isSessionActive(session) {
     if (!session) return false;
@@ -64,14 +64,11 @@ function _resetTimeout(userId) {
     }, SESSION_TIMEOUT_MINUTES * 60 * 1000);
 }
 
-async function initOrGetSession(userId, io) {
+async function initOrGetSession(userId) {
     userId = userId.toString();
-    console.log(`🟢 Initializing or getting session for user ${userId}`);
 
-    if (sessions.has(userId)) {
-        const existing = sessions.get(userId);
-        existing.io = io;
-
+    const existing = sessions.get(userId);
+    if (existing) {
         if (existing.initializing) {
             console.log(`⚠️ Session for user ${userId} is already initializing.`);
             return {status: existing.status};
@@ -103,7 +100,6 @@ async function initOrGetSession(userId, io) {
         authStrategy: new LocalAuth({clientId, dataPath: './.wwebjs_auth'}),
         puppeteer: {
             headless: true,
-            // executablePath: '/usr/bin/chromium-browser',
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
         }
     });
@@ -115,7 +111,6 @@ async function initOrGetSession(userId, io) {
         lastActive: Date.now(),
         qr: null,
         timeoutId: null,
-        io,
         botPaused: false,
         pauseBot: () => session.botPaused = true,
         resumeBot: () => session.botPaused = false,
@@ -128,9 +123,11 @@ async function initOrGetSession(userId, io) {
 
     client.on('qr', (qr) => {
         console.log(`📸 QR received for user ${userId}`);
+        console.log(`client is ${io.to(userId) ? `connected room ~ ${io.to(userId).id}` : 'disconnected'}`);
         session.qr = qr;
         session.status = 'pending';
-        session.io.of("/").to(userId).emit('qr', qr);
+
+        io.to(userId).emit('qr', qr);
 
         _resetTimeout(userId);
 
@@ -138,11 +135,12 @@ async function initOrGetSession(userId, io) {
         qrTimeout = setTimeout(async () => {
             if (session.status === 'pending') {
                 console.log(`⏱️ QR timeout for user ${userId}`);
-                session.io?.to(userId).emit('qr_timeout');
+                io.to(userId).emit('qr_timeout'); // ✅ Same
                 await _destroySession(userId);
             }
-        }, 90 * 1000); // QR timeout increased to 90 seconds
+        }, 90 * 1000);
     });
+
 
     client.on('ready', async () => {
         console.log(`✅ Session ready for user ${userId}`);
@@ -151,7 +149,7 @@ async function initOrGetSession(userId, io) {
         session.qr = null;
         session.lastActive = Date.now();
         if (qrTimeout) clearTimeout(qrTimeout);
-        session.io?.to(userId).emit('ready');
+        io.to(userId).emit('ready');
 
         _resetTimeout(userId);
 
@@ -168,8 +166,8 @@ async function initOrGetSession(userId, io) {
         console.log(`❌ Auth failure for user ${userId}`);
         session.initializing = false;
         session.status = 'auth_failure';
-        session.io?.to(userId).emit('auth_failure', msg);
         if (qrTimeout) clearTimeout(qrTimeout);
+        io.to(userId).emit('auth_failure', msg);
         await _destroySession(userId);
     });
 
@@ -177,8 +175,8 @@ async function initOrGetSession(userId, io) {
         console.log(`🔌 Disconnected: ${userId} => ${reason}`);
         session.initializing = false;
         session.status = 'disconnected';
-        session.io?.to(userId).emit('disconnected', reason);
         if (qrTimeout) clearTimeout(qrTimeout);
+        io.to(userId).emit('disconnected', reason);
         await _destroySession(userId);
     });
 
@@ -192,7 +190,7 @@ async function initOrGetSession(userId, io) {
         await handleIncomingMessage(client, userId, message);
 
         if (!message.fromMe) {
-            session.io?.to(userId).emit('new-message', {
+            io.to(userId).emit('new-message', {
                 userId,
                 id: message.id.id,
                 from: message.from.split('@')[0],
@@ -210,13 +208,14 @@ async function initOrGetSession(userId, io) {
         console.error(`💥 Failed to initialize client for ${userId}:`, err.message);
         session.status = 'init_failed';
         session.initializing = false;
-        session.io?.to(userId).emit('init_failed', err.message);
+        io.to(userId).emit('init_failed', err.message);
         await _destroySession(userId);
     }
 
     return {status: session.status, message: 'Session initializing or waiting for QR'};
 }
 
+// Dumb functions to get the session status and client for testing purposes
 function getClient(userId) {
     return sessions.get(userId.toString());
 }
@@ -230,20 +229,6 @@ function getSessionStatus(userId) {
     };
 }
 
-function hasClient(userId) {
-    const session = sessions.get(userId.toString());
-    if (!session || !session.client) return false;
-    const inactiveTime = Date.now() - session.lastActive;
-    const isTimedOut = inactiveTime > SESSION_TIMEOUT_MINUTES * 60 * 1000;
-    if (isTimedOut) {
-        sessions.delete(userId.toString());
-        WhatsappSession.deleteOne({userId}).catch(console.error);
-        console.log(`Session for user ${userId} timed out and was deleted.`);
-        return false;
-    }
-    return true;
-}
-
 function __getRawSession(userId) {
     return sessions.get(userId.toString());
 }
@@ -253,6 +238,5 @@ module.exports = {
     getClient,
     getSessionStatus,
     __getRawSession,
-    hasClient,
     sessions,
 };

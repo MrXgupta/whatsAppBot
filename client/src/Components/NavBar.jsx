@@ -1,6 +1,16 @@
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
-import {Bot, Layers, LayoutDashboard, LogIn, LogOut, MessageCircleMore, MessageSquareQuote, Users,} from "lucide-react";
+import {
+    Bot,
+    Layers,
+    LayoutDashboard,
+    LogIn,
+    LogOut,
+    MessageCircleMore,
+    MessageSquareQuote,
+    PartyPopper,
+    Users
+} from "lucide-react";
 import logo from "../../public/logo.svg";
 import useClientInfo from "./Profile/userClientInfo.js";
 import {logoutUser} from "../slices/userSlice";
@@ -19,6 +29,7 @@ const NavBar = () => {
         {to: "/inbox", label: "Inbox", icon: MessageCircleMore},
         {to: "/chatbot", label: "Chat Bot", icon: Bot},
         {to: "/chatbot/logs", label: "ChatBot Replies", icon: MessageSquareQuote},
+        {to: "/future-scope", label: "Future Scope", icon: PartyPopper},
     ];
 
     const handleLogout = () => {

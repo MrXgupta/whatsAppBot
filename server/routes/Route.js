@@ -14,20 +14,20 @@ const {getCampaignStats, getAllCampaignStats} = require('../controllers/getCampa
 const getCampaignById = require('../controllers/GetCampaignById');
 const uploadCSV = require('../controllers/uploadCSV');
 const controller = require('../controllers/chatBotData');
-const authController = require('../controllers/authController')
 const botController = require('../controllers/chatBotStatus');
 const ClientInfo = require('../controllers/clientInfo');
 const whatsappSessionController = require('../controllers/startController');
 const whatsappChatsController = require('../controllers/WhatsAppChatController');
+const authController = require('../controllers/authController');
 
 module.exports = (io) => {
     const router = express.Router();
 
-    //auth router
+    // Auth Routes
     router.post("/signup", authController.signup);
     router.post("/login", authController.login);
 
-    // Bulk Messaging Routes
+    // Bulk Messaging
     router.post('/send', ...sendBulkMsg(io));
     router.post('/upload', handleCsv);
 
@@ -46,7 +46,7 @@ module.exports = (io) => {
     router.get('/contacts/export/:id', exportValidatedContacts);
     router.post('/upload-csv', uploadCSV);
 
-    // Chatbot Routes
+    // Chatbot
     router.post('/chatbot/save-rules', controller.saveChatbotRule);
     router.post('/chatbot/save-keywords', controller.saveKeywordGroup);
     router.post('/chatbot/rules', controller.getAllChatbotRules);
@@ -54,20 +54,20 @@ module.exports = (io) => {
     router.post('/chatbot-conversations', controller.getConversation);
     router.post('/chatbotStats', controller.getBotReplyStats);
 
-    // Bot
+    // Bot Control
     router.post('/bot/status', botController.setBotStatus);
     router.get('/bot/status', botController.getBotStatus);
 
-
-    // WhatsApp Chats Routes
+    // WhatsApp Chats
     router.post('/chats/history', whatsappChatsController.fetchChatHistory);
     router.post('/chats/contacts', whatsappChatsController.fetchAllContacts);
     router.post('/chats/send', whatsappChatsController.sendMessage);
     router.post('/chats/mark-read', whatsappChatsController.markAsRead);
 
-    // WhatsApp Client Info & Logout
-    router.post('/client-info', ClientInfo)
+    // WhatsApp Info
+    router.post('/client-info', ClientInfo);
 
+    // Logout (optional - can improve this later)
     router.post('/logout', async (req, res) => {
         try {
             await client.logout();
@@ -81,12 +81,15 @@ module.exports = (io) => {
         }
     });
 
+    // WhatsApp Session Init
     router.post('/session/init', async (req, res) => {
         const {userId} = req.body;
         if (!userId) return res.status(400).json({error: 'userId is required'});
 
+        const ioInstance = req.app.get("io");
+
         try {
-            const result = await whatsappSessionController.initOrGetSession(userId, req.app.get(io));
+            const result = await whatsappSessionController.initOrGetSession(userId, ioInstance);
             res.json(result);
         } catch (e) {
             console.error(e);
@@ -114,6 +117,5 @@ module.exports = (io) => {
         }
     });
 
-    module.exports = router;
     return router;
 };

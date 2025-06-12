@@ -1,3 +1,4 @@
+const whatsappSessionController = require("./startController");
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const generateToken = (user) => {
@@ -7,6 +8,7 @@ const generateToken = (user) => {
         {expiresIn: '7d'}
     );
 };
+const {initOrGetSession} = require("./startController");
 
 // This function is responsible for login and signup process
 const authController = {
@@ -34,21 +36,18 @@ const authController = {
 
     login: async (req, res) => {
         const {email, password} = req.body;
-        if (!email || !password) return res.status(400).json({error: "All fields are required"});
+        if (!email || !password)
+            return res.status(400).json({error: "All fields required"});
 
         const user = await User.findOne({email});
-        if (!user) return res.status(400).json({error: "Invalid credentials"});
+        if (!user)
+            return res.status(400).json({error: "Invalid credentials"});
 
         const isMatch = await user.matchPassword(password);
-        if (!isMatch) return res.status(401).json({error: "Incorrect password"});
+        if (!isMatch)
+            return res.status(401).json({error: "Incorrect password"});
 
-        const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
-
-        // if (!sessionManager.hasClient(user._id)) {
-        //     const client = require('../Backup/whatsapp/initClient')(user._id, global.io);
-        //     await sessionManager.setClient(user._id, client);
-        //     console.log(`[SESSION CREATED] for user ${user._id}`);
-        // }
+        const token = generateToken(user);
 
         res.status(200).json({
             _id: user._id,

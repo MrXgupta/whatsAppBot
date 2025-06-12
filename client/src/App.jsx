@@ -12,6 +12,7 @@ import ReceivedMessages from './pages/ReceivedMessages';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProtectedRoute from './utils/ProtectedRoute';
+import FutureScope from './pages/FutureScope';
 import {isMobile} from 'react-device-detect';
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
                         <Route path="chatbot" element={<ChatBot/>}/>
                         <Route path="chatbot/logs" element={<ChatBotConversation/>}/>
                         <Route path="inbox" element={<ReceivedMessages/>}/>
+                        <Route path="future-scope" element={<FutureScope/>}/>
                         <Route path="*" element={<Dashboard/>}/>
                     </Route>
                 </Route>

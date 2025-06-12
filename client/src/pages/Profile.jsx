@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import io from "socket.io-client";
 import Swal from "sweetalert2";
@@ -13,115 +13,136 @@ import {setConnectionStatus} from "../slices/userSlice.js";
 
 import {AlertCircle, CheckCircle, RefreshCw, Smartphone, Wifi, WifiOff,} from "lucide-react";
 
-const socketRef = io(import.meta.env.VITE_BASE_URL, {
-    transports: ["websocket"],
-    autoConnect: false,
-});
+const socketRef = io(import.meta.env.VITE_BASE_URL);
 
 const Profile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {qr, qrStatus} = useSelector((state) => state.app);
     const user = useSelector((state) => state.user);
-    const hasInitialized = useRef(false);
     const [initStatus, setInitStatus] = useState("searching");
     const [loading, setLoading] = useState(true);
     const [retryCount, setRetryCount] = useState(0);
     const [qrScanned, setQrScanned] = useState(false);
 
+    useEffect(() => {
+        if (user.isConnected) {
+            navigate("/dashboard");
+        }
+    }, [user.isConnected, navigate]);
+    // useEffect(() => {
+    //     initSession()
+    // }, [])
+
     // Initialize socket once
     useEffect(() => {
+        const connectAndInit = () => {
+            if (user._id) {
+                console.log("Emitting join for user:", user._id);
+                socketRef.emit("join", user._id);
+
+                setTimeout(() => {
+                    initSession(); // ✅ this will now always run
+                }, 300);
+            }
+        };
+
         if (!socketRef.connected) {
+            // Attach listener only once before connect
+            socketRef.once("connect", () => {
+                console.log("Socket connected (via event)");
+                connectAndInit();
+            });
+
             socketRef.connect();
-
-            socketRef.on("connect", () => {
-                console.log("Socket connected");
-                console.log("Socket ID:", socketRef);
-            });
-
-            socketRef.on("disconnect", () => {
-                console.log("Socket disconnected");
-            });
-
-            socketRef.on("qr", (qrCode) => {
-                dispatch(setQr(qrCode));
-                dispatch(setQrStatus("loading"));
-                setInitStatus("scanning");
-                dispatch(setClientReady(false));
-                setQrScanned(false);
-                setLoading(false);
-
-                Swal.fire({
-                    icon: "info",
-                    title: "QR Code Ready",
-                    text: "Please scan the QR code with your WhatsApp.",
-                    toast: true,
-                    position: "top-end",
-                    timer: 2500,
-                    showConfirmButton: false,
-                });
-            });
-
-            socketRef.on("authenticated", () => {
-                dispatch(setQrStatus("scanned"));
-                setInitStatus("connecting");
-                setQrScanned(true);
-
-                Swal.fire({
-                    icon: "success",
-                    title: "QR Scanned Successfully",
-                    text: "Connecting to WhatsApp...",
-                    toast: true,
-                    position: "top-end",
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
-            });
-
-            socketRef.on("ready", () => {
-                dispatch(setClientReady(true));
-                dispatch(setQrStatus("ready"));
-                dispatch(setQr(""));
-                dispatch(setConnectionStatus(true));
-                setInitStatus("ready");
-
-                Swal.fire({
-                    icon: "success",
-                    title: "WhatsApp Connected!",
-                    text: "You can now use the app.",
-                    toast: true,
-                    position: "top-end",
-                    timer: 2000,
-                    showConfirmButton: false,
-                });
-
-                navigate("/dashboard");
-            });
-
-            socketRef.on("auth_failure", (msg) => {
-                dispatch(setQrStatus("error"));
-                dispatch(setClientReady(false));
-                setInitStatus("error");
-
-                Swal.fire({
-                    icon: "error",
-                    title: "Authentication Failed",
-                    text: msg || "WhatsApp authentication failed. Please try again.",
-                });
-            });
-
-            socketRef.on("disconnected", (reason) => {
-                dispatch(setQrStatus("error"));
-                dispatch(setClientReady(false));
-                setInitStatus("error");
-
-                Swal.fire({
-                    icon: "warning",
-                    title: "Disconnected",
-                    text: reason || "Client was disconnected. Please reconnect.",
-                });
-            });
+        } else {
+            // ✅ Socket already connected (e.g. hot reload / re-render), run directly
+            console.log("Socket already connected");
+            connectAndInit();
         }
+
+        socketRef.on("disconnect", () => {
+            console.log("Socket disconnected");
+        });
+
+        socketRef.on("qr", (qrCode) => {
+            dispatch(setQr(qrCode));
+            dispatch(setQrStatus("loading"));
+            setInitStatus("scanning");
+            dispatch(setClientReady(false));
+            setQrScanned(false);
+            setLoading(false);
+
+            Swal.fire({
+                icon: "info",
+                title: "QR Code Ready",
+                text: "Please scan the QR code with your WhatsApp.",
+                toast: true,
+                position: "top-end",
+                timer: 2500,
+                showConfirmButton: false,
+            });
+        });
+
+        socketRef.on("authenticated", () => {
+            dispatch(setQrStatus("scanned"));
+            setInitStatus("connecting");
+            setQrScanned(true);
+
+            Swal.fire({
+                icon: "success",
+                title: "QR Scanned Successfully",
+                text: "Connecting to WhatsApp...",
+                toast: true,
+                position: "top-end",
+                timer: 2000,
+                showConfirmButton: false,
+            });
+        });
+
+        socketRef.on("ready", () => {
+            dispatch(setClientReady(true));
+            dispatch(setQrStatus("ready"));
+            dispatch(setQr(""));
+            dispatch(setConnectionStatus(true));
+            setInitStatus("ready");
+
+            Swal.fire({
+                icon: "success",
+                title: "WhatsApp Connected!",
+                text: "You can now use the app.",
+                toast: true,
+                position: "top-end",
+                timer: 2000,
+                showConfirmButton: false,
+            });
+
+            navigate("/dashboard");
+        });
+
+        socketRef.on("auth_failure", (msg) => {
+            dispatch(setQrStatus("error"));
+            dispatch(setClientReady(false));
+            setInitStatus("error");
+
+            Swal.fire({
+                icon: "error",
+                title: "Authentication Failed",
+                text: msg || "WhatsApp authentication failed. Please try again.",
+            });
+        });
+
+        socketRef.on("disconnected", (reason) => {
+            dispatch(setQrStatus("error"));
+            dispatch(setClientReady(false));
+            setInitStatus("error");
+
+            Swal.fire({
+                icon: "warning",
+                title: "Disconnected",
+                text: reason || "Client was disconnected. Please reconnect.",
+            });
+        });
 
         return () => {
             socketRef.off("qr");
@@ -130,20 +151,7 @@ const Profile = () => {
             socketRef.off("auth_failure");
             socketRef.off("disconnected");
         };
-    }, [dispatch, navigate]);
-
-    useEffect(() => {
-        if (user._id && !user.isConnected && !hasInitialized.current) {
-            hasInitialized.current = true;
-            socketRef.emit("join", user._id);
-        }
-    }, [user._id, user.isConnected]);
-
-    useEffect(() => {
-        if (user.isConnected) {
-            navigate("/dashboard");
-        }
-    }, [user.isConnected, navigate]);
+    }, [dispatch, navigate, user._id]);
 
     const initSession = async () => {
         if (!user?._id) return;
@@ -190,13 +198,6 @@ const Profile = () => {
             });
         }
     };
-
-    useEffect(() => {
-        if (user._id) {
-            initSession();
-            socketRef.emit("join", user._id);
-        }
-    }, [user._id]);
 
     const handleRetry = () => {
         setRetryCount((prev) => prev + 1);
@@ -380,7 +381,8 @@ const Profile = () => {
                         <span>Connecting</span>
                         <span>Ready</span>
                     </div>
-
+                    <p className="py-1 text-red-500">This is one time process or may take upto 10 min please be
+                        patient. </p>
                     <div className="mt-8 bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <h3 className="font-semibold text-blue-800 mb-2">Tips for connecting:</h3>
                         <ul className="text-sm text-blue-700 space-y-1 list-disc pl-5">

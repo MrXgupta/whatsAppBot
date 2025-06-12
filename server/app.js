@@ -5,6 +5,7 @@ const cors = require('cors');
 const http = require('http');
 const {Server} = require('socket.io');
 const routes = require('./routes/Route');
+const {addUserSocket, removeUserSocket,} = require('./controllers/socketStore');
 const app = express();
 const server = http.createServer(app);
 global.sessionManager = require('./Backup/whatsapp/sessionManager');
@@ -41,6 +42,7 @@ const io = new Server(server, {
 
 global.io = io;
 
+app.set("io", io);
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -50,22 +52,16 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch(err => console.error('MongoDB connection error:', err));
 
 io.on('connection', (socket) => {
-    socket.on('join', async (userId) => {
-        if (!userId) {
-            console.warn(`User ID missing for socket ${socket.id}`);
-            return;
-        }
-        const room = userId.toString();
-        if (socket.rooms.has(room)) {
-            console.log(`🔁 Socket ${socket.id} already joined room ${room}`);
-            return;
-        }
-        console.log(`Socket ${socket.id} joining room: ${room}`);
-        socket.join(room);
-        const result = await initOrGetSession(userId, io);
-        console.log(`Session status for ${userId}:`, result);
+    console.log('Socket connected:', socket.id);
+
+    socket.on('join', (userId) => {
+        socket.join(userId);
+        console.log(`🟢 User ${userId} joined room ${userId}`);
     });
 
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected:', socket.id);
+    });
 });
 
 
