@@ -9,7 +9,8 @@ import {
     MessageCircleMore,
     MessageSquareQuote,
     PartyPopper,
-    Users
+    User,
+    Users,
 } from "lucide-react";
 import logo from "../../public/logo.svg";
 import useClientInfo from "./Profile/userClientInfo.js";
@@ -29,6 +30,7 @@ const NavBar = () => {
         {to: "/inbox", label: "Inbox", icon: MessageCircleMore},
         {to: "/chatbot", label: "Chat Bot", icon: Bot},
         {to: "/chatbot/logs", label: "ChatBot Replies", icon: MessageSquareQuote},
+        {to: "/chatbot/logs", label: "ChatBot Replies", icon: User},
         {to: "/future-scope", label: "Future Scope", icon: PartyPopper},
     ];
 

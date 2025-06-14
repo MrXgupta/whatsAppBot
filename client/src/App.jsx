@@ -14,6 +14,7 @@ import Signup from './pages/Signup';
 import ProtectedRoute from './utils/ProtectedRoute';
 import FutureScope from './pages/FutureScope';
 import {isMobile} from 'react-device-detect';
+import LandingPage from "./pages/LandingPage.jsx";
 
 function App() {
     if (isMobile) {
@@ -36,11 +37,12 @@ function App() {
                 {/* Public routes */}
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/signup" element={<Signup/>}/>
+                <Route index element={<LandingPage/>}/>
 
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute/>}>
                     <Route element={<Layout/>}>
-                        <Route index element={<Dashboard/>}/>
+                        <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="contacts" element={<ContactManager/>}/>
                         <Route path="campaigns" element={<Campaigns/>}/>
                         <Route path="contacts/:id" element={<ShowContacts/>}/>
