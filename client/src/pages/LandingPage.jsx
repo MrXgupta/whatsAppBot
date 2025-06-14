@@ -86,14 +86,14 @@ const LandingPage = () => {
     const pricingPlans = [
         {
             name: "Starter",
-            price: "$29",
+            price: "999rs",
             period: "per month",
             features: ["Up to 1,000 messages/month", "Basic automation", "Email support", "Dashboard analytics"],
             recommended: false
         },
         {
             name: "Professional",
-            price: "$79",
+            price: "1899rs",
             period: "per month",
             features: ["Up to 10,000 messages/month", "Advanced automation", "Priority support", "Custom integrations", "A/B testing"],
             recommended: true
@@ -148,7 +148,8 @@ const LandingPage = () => {
                     <div
                         className="mb-6 inline-flex items-center space-x-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
                         <Zap className="w-4 h-4"/>
-                        <span>Trusted by 10,000+ businesses worldwide</span>
+                        {/*<span>Trusted by 10,000+ businesses worldwide</span>*/}
+                        <span>Currently onboarding businesses worldwide</span>
                     </div>
 
                     <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
@@ -503,7 +504,7 @@ const LandingPage = () => {
                 <div className="max-w-6xl mx-auto text-center">
                     <h2 className="text-4xl font-bold mb-12">Trusted by Leading Companies</h2>
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-8 items-center opacity-60">
-                        {['TechFlow', 'ShopSmart', 'EduTech', 'Eventory', 'SupportMart', 'GrowthCo'].map((company, index) => (
+                        {['TechieFlow', 'ShopsSmart', 'EdumTech', 'Eventury', 'SupportOurMart', 'GrowthxCo'].map((company, index) => (
                             <div key={index}
                                  className="text-2xl font-bold text-gray-400 hover:text-blue-600 transition-colors cursor-pointer">
                                 {company}
