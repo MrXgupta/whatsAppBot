@@ -19,6 +19,7 @@ const ClientInfo = require('../controllers/clientInfo');
 const whatsappSessionController = require('../controllers/startController');
 const whatsappChatsController = require('../controllers/WhatsAppChatController');
 const authController = require('../controllers/authController');
+const session = require('../controllers/startController').sessions;
 
 module.exports = (io) => {
     const router = express.Router();
@@ -67,19 +68,38 @@ module.exports = (io) => {
     // WhatsApp Info
     router.post('/client-info', ClientInfo);
 
-    // Logout (optional - can improve this later)
+    // Logout (safe destroy)
     router.post('/logout', async (req, res) => {
         try {
+            const {userId} = req.body;
+            if (!userId) {
+                return res.status(400).json({error: 'userId is required'});
+            }
+
+            const startController = require('../controllers/startController');
+            const rawSession = startController.__getRawSession(userId);
+
+            if (!rawSession || !rawSession.client) {
+                return res.status(404).json({error: 'WhatsApp client session not found.'});
+            }
+
+            const client = rawSession.client;
+
+            console.log(`[LOGOUT] Logging out client for user ${userId}`);
+
             await client.logout();
-            isClientReadyRef.value = false;
             await client.destroy();
-            client.initialize();
+
+            // Remove the session from memory
+            startController.sessions.delete(userId);
+
             res.json({success: true});
         } catch (err) {
             console.error("Logout error:", err);
             res.status(500).json({error: "Logout failed."});
         }
     });
+
 
     // WhatsApp Session Init
     router.post('/session/init', async (req, res) => {
