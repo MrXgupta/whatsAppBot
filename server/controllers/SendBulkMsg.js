@@ -10,7 +10,6 @@ const {getSessionStatus} = require('../controllers/startController');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// This function is responsible to run campaigns it will send messages to the given contact groups at a time interval
 const SendBulkMsg = (io) => {
     const handler = async (req, res) => {
         let {campaignName, groupId, message, minDelay, maxDelay, userId} = req.body;
@@ -65,23 +64,18 @@ const SendBulkMsg = (io) => {
                 logs: [],
             });
 
-            // Limit to 10 contacts for beta mode
-            const BETA_CONTACT_LIMIT = 10;
-            const betaLimitedNumbers = validNumbers.slice(0, BETA_CONTACT_LIMIT);
-
+            // Respond immediately with info
             res.status(200).json({
                 success: true,
                 campaignId: campaign._id,
-                total: betaLimitedNumbers.length,
-                betaNotice: `Beta mode active: Only first ${BETA_CONTACT_LIMIT} contacts will be messaged.`,
+                total: validNumbers.length,
             });
-
 
             // Async messaging
             (async () => {
-                for (let i = 0; i < betaLimitedNumbers.length; i++) {
+                for (let i = 0; i < validNumbers.length; i++) {
                     touchSession(userId);
-                    const number = betaLimitedNumbers[i];
+                    const number = validNumbers[i];
                     let status = 'success';
                     let error = '';
 
@@ -107,15 +101,15 @@ const SendBulkMsg = (io) => {
                     }
 
                     campaign.logs.push({number, status, error});
+
                     io.emit('log', {
                         number,
                         status,
                         error,
-                        progress: ((i + 1) / betaLimitedNumbers.length) * 100,
+                        progress: ((i + 1) / validNumbers.length) * 100,
                         campaignId: campaign._id
                     });
                 }
-
 
                 campaign.status = 'completed';
                 await campaign.save();
