@@ -103,7 +103,7 @@ const SendBulkMsg = (io) => {
                         }
                     } catch (err) {
                         status = 'failed';
-                        error = err.message;
+                        error = err.stack || err.message;
                     }
 
                     campaign.logs.push({number, status, error});
